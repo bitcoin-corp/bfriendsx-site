@@ -1,10 +1,10 @@
 // POST /api/bwalletx/challenge { identityKey } -> { nonce, message, expiresAt, ..., ticket }
 import { createChallenge, originAllowed } from '@bwalletx/connect/server';
-import { ORIGIN, body, seal, secret } from './_auth.js';
+import { ORIGIN, body, originOk, seal, secret } from './_auth.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
-  if (!originAllowed(req.headers.origin, ORIGIN)) return res.status(403).json({ error: 'Wrong origin.' });
+  if (!originOk(req.headers.origin)) return res.status(403).json({ error: 'Wrong origin.' });
   const s = secret();
   if (!s) return res.status(503).json({ error: 'bWalletX connect is not switched on yet.' });
   let pending = null;

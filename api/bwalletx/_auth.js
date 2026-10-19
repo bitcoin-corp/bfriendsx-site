@@ -5,6 +5,8 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto';
 
 export const ORIGIN = process.env.SITE_ORIGIN || 'https://bfriendsx.com';
+/** The apex and its www twin both serve the site; the signed message always names the apex. */
+export const originOk = (o) => { try { const h = new URL(String(o)).host; const a = new URL(ORIGIN).host; return h === a || h === 'www.' + a; } catch { return false; } };
 export const secret = () => {
   const s = process.env.BWALLETX_SESSION_SECRET || '';
   return s.length >= 32 ? s : null;
