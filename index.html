@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>bFriendsX · Bring your people with you</title>
+<meta name="description" content="Your friends aren’t a platform’s to keep. bFriendsX finds who you know on Bitcoin, from the follows you already have, and helps you bring the rest.">
+<link rel="canonical" href="https://bfriendsx.com/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://bfriendsx.com/">
+<meta property="og:site_name" content="bFriendsX">
+<meta property="og:title" content="bFriendsX · Bring your people with you">
+<meta property="og:description" content="Find who you already know on Bitcoin, from the follows you already have. Bring the rest with one link.">
+<meta property="og:image" content="https://bfriendsx.com/og-bfriendsx-v1.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://bfriendsx.com/og-bfriendsx-v1.png">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#000;--ink:#f4f1e8;--mute:#9a968b;--line:rgba(90,216,255,.16);--gold:#ffd24d;--blue:#5ad8ff;--card:#0b0b0c}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.6 'IBM Plex Sans',system-ui,sans-serif;overflow-x:hidden}
+a{color:inherit}
+.wrap{max-width:1160px;margin:0 auto;padding:0 20px}
+.nav{display:flex;align-items:center;justify-content:space-between;height:68px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font:700 22px 'Space Grotesk'}
+.brand span span{color:var(--blue)}
+.nav-links{display:flex;gap:18px;align-items:center;font-size:14px}
+.nav-links a{text-decoration:none;color:#cfcabd}
+@media(max-width:640px){.hide-s{display:none}}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 22px;border-radius:999px;font:600 15px 'Space Grotesk';text-decoration:none;border:0;cursor:pointer}
+.btn-blue{background:linear-gradient(180deg,#a8ecff,#5ad8ff 60%,#21a9d6);color:#001018!important}
+.btn-ghost{border:1px solid var(--line);color:var(--ink)!important;background:transparent}
+.btn-ghost:hover{border-color:var(--blue)}
+.eyebrow,.kicker{font:600 13px 'Space Grotesk';letter-spacing:.18em;text-transform:uppercase;color:var(--blue);margin:0 0 14px}
+h1{font:700 clamp(52px,8.5vw,112px)/.92 'Space Grotesk';letter-spacing:-.045em;margin:0 0 20px}
+h1 em{font-style:normal;color:transparent;-webkit-text-stroke:2px var(--blue)}
+h2{font:700 clamp(32px,4.6vw,56px)/1.02 'Space Grotesk';letter-spacing:-.03em;margin:0 0 18px}
+.lede{font-size:clamp(18px,2.1vw,22px);color:#d8d3c5;max-width:620px;margin:0 0 28px}
+section{padding:88px 0;border-bottom:1px solid var(--line)}
+.hero{padding:40px 0 80px;position:relative;overflow:hidden}
+.hero .wrap{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:40px;align-items:center}
+@media(max-width:900px){.hero .wrap{grid-template-columns:1fr}}
+.ctas{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.small{font-size:13px;color:var(--mute)}
+/* the graph */
+.graph{position:relative;aspect-ratio:1;max-width:460px;width:100%;margin:0 auto}
+.graph svg{position:absolute;inset:0;width:100%;height:100%}
+.graph .me{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:92px;height:92px;border-radius:50%;background:linear-gradient(180deg,#ffe58a,#ffd24d 55%,#e0a800);display:grid;place-items:center;font:700 18px 'Space Grotesk';color:#000;box-shadow:0 0 50px rgba(255,210,77,.35);z-index:2}
+.node{position:absolute;width:54px;height:54px;border-radius:50%;transform:translate(-50%,-50%);display:grid;place-items:center;font:700 15px 'Space Grotesk';color:#fff;background:#1a1a1a;border:2px solid #333;transition:background .5s,border-color .5s,box-shadow .5s}
+.node.here{background:#06252f;border-color:var(--blue);box-shadow:0 0 22px rgba(90,216,255,.45);color:var(--blue)}
+.node small{position:absolute;top:58px;font:500 11px 'IBM Plex Sans';color:var(--mute);white-space:nowrap}
+.line{stroke:#2a2a2a;stroke-width:1.5;transition:stroke .5s}
+.line.here{stroke:var(--blue)}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:30px}
+@media(max-width:820px){.three{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:26px}
+.card h3{font:700 22px 'Space Grotesk';margin:6px 0 10px}
+.card p{color:#d8d3c5;margin:0}
+.card b.n{font:700 44px 'Space Grotesk';color:var(--blue);display:block;line-height:1}
+.tag{display:inline-block;font:600 11px 'Space Grotesk';letter-spacing:.12em;text-transform:uppercase;color:var(--blue);border:1px solid var(--line);border-radius:999px;padding:3px 10px}
+#me{display:none}
+#me.show{display:block}
+.mebox{display:flex;flex-wrap:wrap;gap:18px;align-items:center;margin-top:20px}
+.key{font:500 13px ui-monospace,Menlo,monospace;color:#cfcabd;background:#0b0b0c;border:1px solid var(--line);border-radius:10px;padding:10px 12px;word-break:break-all;max-width:100%}
+footer{padding:40px 0;color:var(--mute);font-size:13px}
+/* bwx.js button, recoloured for bFriendsX */
+.bwx-btn{border-color:rgba(90,216,255,.45)!important;color:var(--blue)!important}
+.bwx-btn.on{background:linear-gradient(180deg,#a8ecff,#5ad8ff 60%,#21a9d6)!important;color:#001018!important}
+</style>
+</head>
+<body>
+<header class="wrap nav">
+  <a class="brand" href="/" aria-label="bFriendsX home"><img src="/logo.svg" width="28" height="28" alt=""><span>bFriends<span>X</span></span></a>
+  <nav class="nav-links" aria-label="Main"><a class="hide-s" href="#how">How it works</a><a class="hide-s" href="https://bmintx.com/flick-off">FLICK OFF</a><span data-bwx></span></nav>
+</header>
+
+<main>
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <p class="eyebrow">Part of FLICK OFF</p>
+      <h1>Bring your <em>people</em> with you.</h1>
+      <p class="lede">Your friends aren’t a platform’s to keep. bFriendsX takes the follows you already have, finds who’s already on Bitcoin, and gives you one link to bring everyone else.</p>
+      <div class="ctas"><span data-bwx></span><a class="btn btn-ghost" href="https://bmintx.com/flick-off/x">Start with your X follows</a></div>
+      <p class="small" style="margin-top:14px">Connect bWalletX: it’s your key and your address book. No passwords, no email.</p>
+    </div>
+    <div class="graph" aria-hidden="true" id="graph"><svg id="lines"></svg><div class="me">you</div></div>
+  </div>
+</section>
+
+<section id="me" aria-live="polite">
+  <div class="wrap">
+    <p class="kicker">You’re connected</p>
+    <h2>Welcome. Here’s you.</h2>
+    <div class="mebox"><div class="key" id="meKey"></div></div>
+    <p class="lede" style="margin-top:20px">Your friends list builds from here. Bring your X follows with FLICK OFF and we’ll show who’s already on bChatX, and give you your invite link for the rest.</p>
+    <div class="ctas"><a class="btn btn-blue" href="https://bmintx.com/flick-off/x">Bring my X follows</a><a class="btn btn-ghost" href="https://bchatx.com">Open bChatX</a></div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <p class="kicker">How it works</p>
+    <h2>Your friends graph, owned by you.</h2>
+    <div class="three">
+      <div class="card"><b class="n">1</b><h3>Bring your follows</h3><p>Sign in with X, or drop the archive you downloaded. Your follows come over as a list. Nothing is posted anywhere.</p></div>
+      <div class="card"><b class="n">2</b><h3>See who’s here</h3><p>Anyone you follow who’s already on bChatX lights up, and you’re reconnected straight away.</p></div>
+      <div class="card"><b class="n">3</b><h3>Invite the rest</h3><p>Everyone else gets your personal invite link, sent by you, from your account. We never message your friends.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="kicker">Why it’s different</p>
+    <h2>Your address book isn’t our product.</h2>
+    <div class="three">
+      <div class="card"><span class="tag">Yours</span><h3>Keyed to your wallet</h3><p>Your friends list belongs to your bWalletX identity, not to an account we could close.</p></div>
+      <div class="card"><span class="tag">Portable</span><h3>Works across the family</h3><p>The same friends on bChatX, bMoviesX, bJobsX and in bWalletX itself. Connect once.</p></div>
+      <div class="card"><span class="tag">Quiet</span><h3>No spam, ever</h3><p>We don’t mail your contacts, sell your graph or nudge your friends. Invites only go out when you send them.</p></div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="wrap">bFriendsX · part of the bWalletX family · <a href="https://bmintx.com/flick-off">FLICK OFF</a> · <a href="https://bchatx.com">bChatX</a> · <a href="https://bwalletx.com/get">Get bWalletX</a></footer>
+
+<script src="https://unpkg.com/@bwalletx/connect@0.5.0/dist/bwalletx-connect.global.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="/bwx.js"></script>
+<script>
+(() => {
+  // the graph: friends light up one by one as "already here"
+  const g = document.getElementById('graph'), svg = document.getElementById('lines');
+  const names = ['Ana','Kai','Mo','Zoe','Ravi','Lena','Sol','Ike','June','Theo'];
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const nodes = names.map((n, i) => {
+    const a = (i / names.length) * Math.PI * 2 - Math.PI / 2, r = 38 + (i % 2) * 6;
+    const x = 50 + Math.cos(a) * r, y = 50 + Math.sin(a) * r;
+    const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    l.setAttribute('x1', '50%'); l.setAttribute('y1', '50%'); l.setAttribute('x2', x + '%'); l.setAttribute('y2', y + '%'); l.setAttribute('class', 'line'); svg.appendChild(l);
+    const d = document.createElement('div'); d.className = 'node'; d.style.left = x + '%'; d.style.top = y + '%'; d.innerHTML = `${n[0]}<small>${n}</small>`; g.appendChild(d);
+    return { d, l };
+  });
+  let k = 0;
+  const step = () => {
+    const nd = nodes[k % nodes.length];
+    if (k >= nodes.length * 0.7) { nodes.forEach((x) => { x.d.classList.remove('here'); x.l.classList.remove('here'); }); k = 0; return; }
+    nd.d.classList.add('here'); nd.l.classList.add('here'); k += 1 + (k % 3 === 2 ? 1 : 0);
+  };
+  if (reduce) nodes.slice(0, 6).forEach((x) => { x.d.classList.add('here'); x.l.classList.add('here'); });
+  else setInterval(step, 900);
+
+  // once connected, show the welcome panel
+  const showMe = (key) => { const s = document.getElementById('me'); if (!key) { s.classList.remove('show'); return; } document.getElementById('meKey').textContent = 'bWalletX identity · ' + key; s.classList.add('show'); };
+  document.addEventListener('bfriendsx-wallet', (e) => { showMe(e.detail.identityKey); document.getElementById('me').scrollIntoView({ behavior: 'smooth' }); });
+  fetch('/api/bwalletx/session', { credentials: 'same-origin' }).then((r) => r.json()).then((j) => showMe(j.identityKey)).catch(() => {});
+})();
+</script>
+</body>
+</html>
