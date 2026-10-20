@@ -29,6 +29,7 @@
     <h1 id="title">You’ve been flicked on.</h1>
     <p class="lede" id="lede">Checking your invite…</p>
     <div class="ctas" id="ctas"><span data-bwx></span><a class="btn btn-ghost" href="https://bwalletx.com/get">Get bWalletX</a></div>
+    <p id="giftLine" style="color:var(--gold);font:600 18px 'Space Grotesk';margin:0 0 14px" hidden></p>
     <p class="small" id="from"></p>
   </main>
 </div>
@@ -44,6 +45,29 @@
   const short = (k) => k.slice(0, 6) + '…' + k.slice(-4);
   const t = location.pathname.split('/i/')[1] || '';
   let inv = null, done = false;
+  // a gift pot rides in the #fragment (never sent to any server); load the gift code only when there is one
+  const hasGift = /(?:^#|&)g=/.test(location.hash);
+  let giftMod = null, gift = null, giftSats = 0, myKey = null;
+  const giftReady = hasGift ? import('/gift.js').then(async (m) => {
+    giftMod = m; gift = m.giftFromHash(location.hash);
+    if (!gift) return;
+    const pot = await m.potOf(gift).catch(() => null);
+    giftSats = pot ? pot.sats : 0;
+    const line = $('giftLine'); line.hidden = false;
+    line.textContent = giftSats ? '…and left you ' + m.fmtSats(giftSats) + '. Connect bWalletX to claim it.' : 'The gift in this link has already been claimed.';
+  }).catch(() => {}) : Promise.resolve();
+  async function claim(key, takingBack) {
+    await giftReady;
+    if (!giftMod || !gift || !giftSats) return;
+    const line = $('giftLine');
+    line.textContent = takingBack ? 'Taking your gift back… approve it in bWalletX.' : 'Claiming your gift… approve it in bWalletX.';
+    try {
+      const r = await giftMod.claimGift(gift, key);
+      line.textContent = (takingBack ? 'Back in your wallet: ' : 'In your bWalletX now: ') + giftMod.fmtSats(r.sats) + '.';
+      history.replaceState(null, '', location.pathname);   // drop the secret from the address bar
+      giftSats = 0;
+    } catch (e) { line.textContent = (e && e.message) || 'Could not claim the gift. Try again.'; }
+  }
   const gold = (key) => {
     if (done || !key) return; done = true;
     const r = $('ring'), b = $('badge');
@@ -55,6 +79,16 @@
       ? (inv.network === 'link' ? 'This is your own FLICK ON link. Post it anywhere.' : 'This is your own invite link. Send it to ' + inv.name + '.')
       : 'Your badge is gold now. Bring your own friends next, or say hello on bChatX.';
     $('ctas').innerHTML = '<a class="btn btn-gold" href="/friends">Bring your friends</a><a class="btn btn-ghost" href="https://bchatx.com">Open bChatX</a>';
+    myKey = key;
+    if (hasGift) {
+      if (inv && key === inv.from) giftReady.then(() => {
+        if (!giftSats) return;
+        const b = document.createElement('button'); b.className = 'btn btn-ghost'; b.type = 'button'; b.textContent = 'Take the gift back';
+        b.onclick = () => { b.remove(); claim(key, true); };
+        $('ctas').appendChild(b);
+      });
+      else claim(key, false);
+    }
   };
   fetch('/api/invite?t=' + encodeURIComponent(t)).then((r) => r.json().then((j) => [r.ok, j])).then(([ok, j]) => {
     if (!ok) { $('lede').textContent = j.error || 'That invite link is broken.'; return; }
