@@ -22,11 +22,12 @@
 
   <section class="panel" id="step1">
     <h2>1. Open your exports</h2>
-    <label class="drop" id="drop"><input type="file" id="files" multiple accept=".zip,.csv,application/zip,text/csv"><b>Choose or drop your export files</b><br><span class="small">.zip files as the networks send them (LinkedIn's Connections.csv works too). Read on this device. Nothing is uploaded.</span></label>
+    <label class="drop" id="drop"><input type="file" id="files" multiple accept=".zip,.csv,.json,application/zip,text/csv,application/json"><b>Choose or drop your export files</b><br><span class="small">.zip files as the networks send them (LinkedIn's Connections.csv and Telegram's result.json work too). Read on this device. Nothing is uploaded.</span></label>
     <ul class="how">
       <li><span class="badge facebook">f</span> <b>Facebook</b><br><span class="small">Settings → Download your information → Connections → Friends, format JSON.</span></li>
       <li><span class="badge instagram">ig</span> <b>Instagram</b><br><span class="small">Accounts Centre → Download your information → Followers and following, format JSON.</span></li>
       <li><span class="badge linkedin">in</span> <b>LinkedIn</b><br><span class="small">Settings → Data privacy → Get a copy of your data → Connections.</span></li>
+      <li><span class="badge telegram">tg</span> <b>Telegram</b><br><span class="small">Telegram Desktop → Settings → Advanced → Export Telegram data. Tick contacts and chats, format JSON.</span></li>
       <li><span class="badge x">X</span> <b>X</b><br><span class="small">Settings → Your account → Download an archive. X gives account numbers only, so names show later.</span></li>
     </ul>
     <p class="small err" id="readErr" role="alert"></p>
@@ -43,13 +44,19 @@
     <p class="small" id="dupes"></p>
   </section>
 
+  <section class="panel hidden" id="groupsPanel">
+    <h2>Your group chats</h2>
+    <p class="small">Bring a whole group across: pick its members, then make their invite links below.</p>
+    <ul class="list groups" id="groups"></ul>
+  </section>
+
   <section class="panel hidden" id="step3">
     <h2>3. Send the links</h2>
     <p class="small" id="needWallet">Connect bWalletX first, so your friends know the invites are from you.</p>
     <div class="bar"><button class="btn btn-blue" id="make" type="button" disabled>Make invite links</button><button class="btn btn-ghost mini hidden" id="copyAll" type="button">Copy all</button></div>
     <p class="small err" id="makeErr" role="alert"></p>
     <ul class="list links" id="links"></ul>
-    <p class="small">Each link only says your bWalletX identity, their name and where you know them from. Email addresses never leave this device: the email buttons open your own mail app.</p>
+    <p class="small">Each link only says your bWalletX identity, their name and where you know them from. Email addresses and phone numbers never leave this device: the Email and Text buttons open your own apps.</p>
   </section>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>

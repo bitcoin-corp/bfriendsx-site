@@ -1,13 +1,14 @@
 // bfriendsx.com/friends: read friends lists from network exports on this device, pick people, make invite links.
-import { friends, suggestMerges } from '/lib/flick/index.js';
+import { friends, suggestMerges, telegramGroups } from '/lib/flick/index.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-const LABEL = { x: 'X', facebook: 'f', instagram: 'ig', linkedin: 'in', tiktok: 'tt', youtube: 'yt' };
-const NAME = { x: 'X', facebook: 'Facebook', instagram: 'Instagram', linkedin: 'LinkedIn', tiktok: 'TikTok', youtube: 'YouTube' };
-const REL = { friend: 'friend', connection: 'connection', follower: 'follows you', following: 'you follow', mutual: 'follow each other' };
+const LABEL = { telegram: 'tg', x: 'X', facebook: 'f', instagram: 'ig', linkedin: 'in', tiktok: 'tt', youtube: 'yt' };
+const NAME = { telegram: 'Telegram', x: 'X', facebook: 'Facebook', instagram: 'Instagram', linkedin: 'LinkedIn', tiktok: 'TikTok', youtube: 'YouTube' };
+const REL = { contact: 'contact', chat: 'chatted', friend: 'friend', connection: 'connection', follower: 'follows you', following: 'you follow', mutual: 'follow each other' };
 
-let all = [];             // Friend[] from every export opened so far
+let all = [];
+let groups = [];          // Telegram group chats             // Friend[] from every export opened so far
 const picked = new Set(); // indexes into `all`
 const shown = new Set(Object.keys(NAME));
 let me = null;
@@ -16,7 +17,7 @@ let claimed = new Set(); // network + '\n' + name of friends who accepted your i
 
 // ── reading exports ──
 const asFiles = async (file) => {
-  if (/\.csv$/i.test(file.name)) return [{ path: file.name, size: file.size, text: () => file.text() }];
+  if (/\.(csv|json)$/i.test(file.name)) return [{ path: file.name, size: file.size, text: () => file.text() }];
   const zip = await JSZip.loadAsync(file);
   return Object.values(zip.files).filter((e) => !e.dir).map((e) => ({ path: e.name, size: e._data?.uncompressedSize ?? 0, text: () => e.async('string') }));
 };
@@ -26,7 +27,9 @@ async function open(list) {
   let added = 0;
   for (const file of list) {
     try {
-      const got = await friends(await asFiles(file));
+      const fl = await asFiles(file);
+      const got = await friends(fl);
+      groups.push(...await telegramGroups(fl));
       if (!got.length) { $('readErr').textContent = `No friends list found in ${file.name}. Check it's the export with your friends or followers in it.`; continue; }
       for (const f of got) { const k = f.network + '\n' + f.key; if (!seen.has(k)) { seen.add(k); all.push(f); added++; } }
     } catch {
@@ -70,10 +73,25 @@ function render() {
   const CAP = 1000;
   $('list').innerHTML = rows.slice(0, CAP).map(([f, i]) => `<li><label><input type="checkbox" data-i="${i}" ${picked.has(i) ? 'checked' : ''}>${claimed.has(f.network + '\n' + f.name) || onb.has(i) ? '<span class="badge b" title="On b: accepted your invite">b</span>' : `<span class="badge ${f.network}">${LABEL[f.network]}</span>`}<span class="nm">${esc(f.name)}${f.handle && f.handle !== f.name ? ` <span class="small">@${esc(f.handle)}</span>` : ''}</span></label><span class="meta">${esc(REL[f.relation])}${f.since ? ' · ' + f.since.slice(0, 4) : ''}</span></li>`).join('')
     + (rows.length > CAP ? `<li class="small">and ${(rows.length - CAP).toLocaleString()} more. Search to find them.</li>` : '');
+  showGroups();
   const d = suggestMerges(all);
   $('dupes').textContent = d.length ? `${d.length} ${d.length === 1 ? 'person appears' : 'people appear'} on more than one network, e.g. ${d.slice(0, 3).map((g) => g[0].name).join(', ')}. Each gets one invite per network you pick.` : '';
   count();
 }
+function showGroups() {
+  $('groupsPanel').classList.toggle('hidden', !groups.length);
+  $('groups').innerHTML = groups.map((g, gi) => `<li><span class="badge telegram">tg</span><span class="nm">${esc(g.name)}</span><span class="meta">${g.members.length} ${g.members.length === 1 ? 'person' : 'people'}</span><button class="btn btn-ghost mini" type="button" data-g="${gi}">Pick members</button></li>`).join('');
+}
+$('groups').onclick = (e) => {
+  const b = e.target.closest('[data-g]'); if (!b) return;
+  const g = groups[+b.dataset.g];
+  for (const m of g.members) {
+    let i = all.findIndex((f) => f.network === 'telegram' && f.key === m.userId);
+    if (i < 0) { all.push({ network: 'telegram', key: m.userId, name: m.name, handle: null, url: null, email: null, company: null, phone: null, relation: 'chat', since: null }); i = all.length - 1; }
+    picked.add(i);
+  }
+  b.textContent = 'Picked'; render();
+};
 function count() {
   $('picked').textContent = `${picked.size.toLocaleString()} picked`;
   $('make').disabled = !picked.size || !me;
@@ -111,7 +129,8 @@ function showLinks(links) {
   const share = !!navigator.share;
   $('links').innerHTML = links.map((l, i) => {
     const mail = l.friend?.email ? `<a class="btn btn-ghost mini" href="mailto:${encodeURIComponent(l.friend.email)}?subject=${encodeURIComponent('Come and join me on bWalletX')}&body=${encodeURIComponent(`Hi ${l.name.split(' ')[0]}, I'm moving my friends onto Bitcoin with bFriendsX. Here's your invite: ${l.url}`)}">Email</a>` : '';
-    return `<li><span class="badge ${l.network}">${LABEL[l.network]}</span><span class="nm">${esc(l.name)}</span><code>${esc(l.url)}</code><button class="btn btn-ghost mini" type="button" data-copy="${i}">Copy</button>${share ? `<button class="btn btn-ghost mini" type="button" data-share="${i}">Share</button>` : ''}${mail}</li>`;
+    const sms = l.friend?.phone ? `<a class="btn btn-ghost mini" href="sms:${encodeURIComponent(l.friend.phone.replace(/[^+0-9]/g, ''))}?&body=${encodeURIComponent(`Hi ${l.name.split(' ')[0]}, I'm moving my friends onto Bitcoin with bFriendsX. Here's your invite: ${l.url}`)}">Text</a>` : '';
+    return `<li><span class="badge ${l.network}">${LABEL[l.network]}</span><span class="nm">${esc(l.name)}</span><code>${esc(l.url)}</code><button class="btn btn-ghost mini" type="button" data-copy="${i}">Copy</button>${share ? `<button class="btn btn-ghost mini" type="button" data-share="${i}">Share</button>` : ''}${mail}${sms}</li>`;
   }).join('');
 }
 $('links').onclick = async (e) => {

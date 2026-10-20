@@ -36,8 +36,8 @@
 <script>
 (() => {
   const $ = (id) => document.getElementById(id);
-  const LABEL = { x: 'X', facebook: 'f', instagram: 'ig', linkedin: 'in', tiktok: 'tt', youtube: 'yt' };
-  const NAME = { x: 'X', facebook: 'Facebook', instagram: 'Instagram', linkedin: 'LinkedIn', tiktok: 'TikTok', youtube: 'YouTube' };
+  const LABEL = { telegram: 'tg', x: 'X', facebook: 'f', instagram: 'ig', linkedin: 'in', tiktok: 'tt', youtube: 'yt' };
+  const NAME = { telegram: 'Telegram', x: 'X', facebook: 'Facebook', instagram: 'Instagram', linkedin: 'LinkedIn', tiktok: 'TikTok', youtube: 'YouTube' };
   const short = (k) => k.slice(0, 6) + '…' + k.slice(-4);
   const t = location.pathname.split('/i/')[1] || '';
   let inv = null, done = false;

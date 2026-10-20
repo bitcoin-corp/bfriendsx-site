@@ -7,7 +7,7 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:
 import { readCookie, verifySession } from '@bwalletx/connect/server';
 import { ORIGIN, body, originOk, secret } from './bwalletx/_auth.js';
 
-const NETWORKS = new Set(['x', 'facebook', 'instagram', 'linkedin', 'tiktok', 'youtube']);
+const NETWORKS = new Set(['x', 'facebook', 'instagram', 'linkedin', 'tiktok', 'youtube', 'telegram']);
 const MAX = 500;
 const key = (s) => createHash('sha256').update('bfriendsx invite\n' + s).digest();
 export const seal = (s, d) => {

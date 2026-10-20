@@ -1,4 +1,4 @@
-:root{--bg:#000;--ink:#f4f1e8;--mute:#9a968b;--line:rgba(90,216,255,.16);--gold:#ffd24d;--blue:#5ad8ff;--card:#0b0b0c;--x:#e7e7e7;--facebook:#1877f2;--instagram:#e1306c;--linkedin:#0a66c2;--tiktok:#25f4ee;--youtube:#ff0033}
+:root{--bg:#000;--ink:#f4f1e8;--mute:#9a968b;--line:rgba(90,216,255,.16);--gold:#ffd24d;--blue:#5ad8ff;--card:#0b0b0c;--x:#e7e7e7;--facebook:#1877f2;--instagram:#e1306c;--linkedin:#0a66c2;--tiktok:#25f4ee;--youtube:#ff0033;--telegram:#26a5e4}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.6 'IBM Plex Sans',system-ui,sans-serif;overflow-x:hidden}
 a{color:inherit}
@@ -28,7 +28,7 @@ h2{font:700 24px 'Space Grotesk';margin:0 0 10px}
 .how li{border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14px}
 .how b{font-family:'Space Grotesk'}
 .badge{display:inline-grid;place-items:center;min-width:26px;height:26px;padding:0 6px;border-radius:999px;font:700 11px 'Space Grotesk';color:#000;flex:none}
-.badge.x{background:var(--x)}.badge.facebook{background:var(--facebook);color:#fff}.badge.instagram{background:var(--instagram);color:#fff}.badge.linkedin{background:var(--linkedin);color:#fff}.badge.tiktok{background:var(--tiktok)}.badge.youtube{background:var(--youtube);color:#fff}
+.badge.x{background:var(--x)}.badge.facebook{background:var(--facebook);color:#fff}.badge.instagram{background:var(--instagram);color:#fff}.badge.linkedin{background:var(--linkedin);color:#fff}.badge.tiktok{background:var(--tiktok)}.badge.youtube{background:var(--youtube);color:#fff}.badge.telegram{background:var(--telegram);color:#fff}
 .badge.b{background:linear-gradient(180deg,#ffe58a,#ffd24d 55%,#c98f00)}
 .bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 12px}
 .bar input[type=search]{flex:1;min-width:180px;background:#000;border:1px solid var(--line);border-radius:999px;color:var(--ink);padding:10px 16px;font:inherit}
@@ -50,3 +50,4 @@ h2{font:700 24px 'Space Grotesk';margin:0 0 10px}
 .ring .badge{width:132px;height:132px;font-size:44px;border-radius:50%;transition:background .5s,color .5s}
 .ring.flip{transform:rotateY(360deg)}
 @media (prefers-reduced-motion:reduce){.ring{transition:none}}
+.groups li{flex-wrap:wrap}.groups .nm{flex:1 1 160px}
