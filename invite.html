@@ -45,6 +45,7 @@
     if (done || !key) return; done = true;
     const r = $('ring'), b = $('badge');
     r.classList.add('flip');
+    if (inv && key !== inv.from) fetch('/api/claims', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ t }) }).catch(() => {});
     setTimeout(() => { b.className = 'badge b'; b.textContent = 'b'; }, 300);
     $('title').textContent = "You're on b.";
     $('lede').textContent = inv && key === inv.from

@@ -11,6 +11,7 @@ let all = [];             // Friend[] from every export opened so far
 const picked = new Set(); // indexes into `all`
 const shown = new Set(Object.keys(NAME));
 let me = null;
+let claimed = new Set(); // network + '\n' + name of friends who accepted your invite
 
 // ── reading exports ──
 const asFiles = async (file) => {
@@ -51,7 +52,7 @@ function render() {
   $('nets').innerHTML = Object.keys(by).map((n) => `<button class="chip" type="button" data-n="${n}" aria-pressed="${shown.has(n)}"><span class="badge ${n}">${LABEL[n]}</span>${NAME[n]}</button>`).join('');
   const rows = visible();
   const CAP = 1000;
-  $('list').innerHTML = rows.slice(0, CAP).map(([f, i]) => `<li><label><input type="checkbox" data-i="${i}" ${picked.has(i) ? 'checked' : ''}><span class="badge ${f.network}">${LABEL[f.network]}</span><span class="nm">${esc(f.name)}${f.handle && f.handle !== f.name ? ` <span class="small">@${esc(f.handle)}</span>` : ''}</span></label><span class="meta">${esc(REL[f.relation])}${f.since ? ' · ' + f.since.slice(0, 4) : ''}</span></li>`).join('')
+  $('list').innerHTML = rows.slice(0, CAP).map(([f, i]) => `<li><label><input type="checkbox" data-i="${i}" ${picked.has(i) ? 'checked' : ''}>${claimed.has(f.network + '\n' + f.name) ? '<span class="badge b" title="On b: accepted your invite">b</span>' : `<span class="badge ${f.network}">${LABEL[f.network]}</span>`}<span class="nm">${esc(f.name)}${f.handle && f.handle !== f.name ? ` <span class="small">@${esc(f.handle)}</span>` : ''}</span></label><span class="meta">${esc(REL[f.relation])}${f.since ? ' · ' + f.since.slice(0, 4) : ''}</span></li>`).join('')
     + (rows.length > CAP ? `<li class="small">and ${(rows.length - CAP).toLocaleString()} more. Search to find them.</li>` : '');
   const d = suggestMerges(all);
   $('dupes').textContent = d.length ? `${d.length} ${d.length === 1 ? 'person appears' : 'people appear'} on more than one network, e.g. ${d.slice(0, 3).map((g) => g[0].name).join(', ')}. Each gets one invite per network you pick.` : '';
@@ -105,6 +106,11 @@ $('links').onclick = async (e) => {
 $('copyAll').onclick = async () => { await navigator.clipboard?.writeText(lastLinks.map((l) => `${l.name} (${NAME[l.network]}): ${l.url}`).join('\n')); $('copyAll').textContent = 'Copied'; };
 
 // ── wallet ──
-const setMe = (k) => { me = k || null; count(); };
+const loadClaims = () => fetch('/api/claims', { credentials: 'same-origin' }).then((r) => r.ok ? r.json() : { claims: [] }).then((j) => {
+  claimed = new Set(j.claims.map((c) => c.network + '\n' + c.name));
+  $('onb').textContent = j.claims.length ? `${j.claims.length.toLocaleString()} ${j.claims.length === 1 ? 'friend has' : 'friends have'} joined you on b.` : '';
+  if (all.length) render();
+}).catch(() => {});
+const setMe = (k) => { me = k || null; count(); if (me) loadClaims(); };
 document.addEventListener('bfriendsx-wallet', (e) => setMe(e.detail.identityKey));
 fetch('/api/bwalletx/session', { credentials: 'same-origin' }).then((r) => r.json()).then((j) => setMe(j.identityKey)).catch(() => {});

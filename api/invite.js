@@ -10,12 +10,12 @@ import { ORIGIN, body, originOk, secret } from './bwalletx/_auth.js';
 const NETWORKS = new Set(['x', 'facebook', 'instagram', 'linkedin', 'tiktok', 'youtube']);
 const MAX = 500;
 const key = (s) => createHash('sha256').update('bfriendsx invite\n' + s).digest();
-const seal = (s, d) => {
+export const seal = (s, d) => {
   const iv = randomBytes(12), c = createCipheriv('aes-256-gcm', key(s), iv);
   const b = Buffer.concat([c.update(JSON.stringify(d), 'utf8'), c.final()]);
   return Buffer.concat([iv, c.getAuthTag(), b]).toString('base64url');
 };
-const open = (s, t) => {
+export const open = (s, t) => {
   try {
     const b = Buffer.from(String(t), 'base64url');
     const d = createDecipheriv('aes-256-gcm', key(s), b.subarray(0, 12));
