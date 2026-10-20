@@ -39,10 +39,29 @@ export function giftFromHash(hash) {
   try { return { key: PrivateKey.fromWif(m[1]), txid: m[2] }; } catch { return null; }
 }
 
+// WhatsOnChain serves BEEF only for CONFIRMED txs. A fresh gift isn't confirmed for ~10 minutes, so build it from the
+// raw tx plus its parents (recursively, until a confirmed ancestor with a proof). WoC allows ~3 requests a second.
+const get = async (u) => {
+  for (let t = 0; t < 6; t++) {
+    const r = await fetch(u).catch(() => null);
+    const x = r && r.ok ? (await r.text()).trim().replace(/"/g, '') : '';
+    if (x) return x;
+    await new Promise((res) => setTimeout(res, 700 * (t + 1)));
+  }
+  throw new Error('Could not reach WhatsOnChain. Try again in a minute.');
+};
+async function hydrate(txid, depth = 0) {
+  const b = await get(`${WOC}/tx/${txid}/beef`).catch(() => '');
+  if (/^[0-9a-f]{20,}$/i.test(b)) return Transaction.fromHexBEEF(b);
+  if (depth > 30) throw new Error('This gift is waiting on too many unconfirmed payments. Try again after the next block.');
+  const tx = Transaction.fromHex(await get(`${WOC}/tx/${txid}/hex`));
+  for (const inp of tx.inputs) { await new Promise((r) => setTimeout(r, 350)); inp.sourceTransaction = await hydrate(inp.sourceTXID, depth + 1); }
+  return tx;
+}
+
 /** What's left in the pot: unspent outputs of the funding tx locked to the pot key. */
 export async function potOf(g) {
-  const beefHex = (await (await fetch(`${WOC}/tx/${g.txid}/beef`)).text()).trim().replace(/"/g, '');
-  const tx = Transaction.fromHexBEEF(beefHex);
+  const tx = await hydrate(g.txid);
   const lock = new P2PKH().lock(g.key.toAddress()).toHex();
   const outs = [];
   for (let i = 0; i < tx.outputs.length; i++) {
