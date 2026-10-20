@@ -22,5 +22,11 @@
       "destination": "https://bfriendsx.com/:path*",
       "permanent": true
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/i/:t",
+      "destination": "/invite"
+    }
   ]
 }

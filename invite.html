@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>You're invited · bFriendsX</title>
+<meta name="description" content="A friend is bringing you onto Bitcoin. Join bWalletX and get your gold b.">
+<meta property="og:title" content="A friend is bringing you to Bitcoin">
+<meta property="og:description" content="Join bWalletX, keep your friends, and get your gold b.">
+<meta property="og:image" content="https://bfriendsx.com/og-bfriendsx-v1.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/friends.css">
+<style>.center{text-align:center;max-width:560px;margin:0 auto}.center .lede{margin-left:auto;margin-right:auto}.ctas{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin:0 0 18px}</style>
+</head>
+<body>
+<aside class="bwx-strip" aria-label="bWalletX"><a href="https://bwalletx.com"><svg viewBox="23 8 74 100" aria-hidden="true" focusable="false"><defs><linearGradient id="bwx-g" gradientUnits="userSpaceOnUse" x1="0" y1="12" x2="0" y2="105"><stop offset="0" stop-color="#FFE58A"/><stop offset=".55" stop-color="#FFD24D"/><stop offset="1" stop-color="#C98F00"/></linearGradient><mask id="bwx-m"><rect width="140" height="140" fill="#fff"/><circle cx="60" cy="72" r="15" fill="#000"/></mask></defs><g fill="url(#bwx-g)" mask="url(#bwx-m)"><polygon points="45,12 45,76 27,76 27,30"/><circle cx="60" cy="72" r="33"/></g></svg><span>Part of <b>bWalletX</b></span><span class="bwx-go" aria-hidden="true">&rarr;</span></a></aside>
+<div class="wrap">
+  <header class="nav"><a class="brand" href="/" aria-label="bFriendsX home"><img src="/logo.svg" width="28" height="28" alt=""><span>bFriends<span>X</span></span></a></header>
+  <main class="center" id="main">
+    <div class="ring" id="ring"><span class="badge" id="badge">?</span></div>
+    <h1 id="title">You're invited.</h1>
+    <p class="lede" id="lede">Checking your invite…</p>
+    <div class="ctas" id="ctas"><span data-bwx></span><a class="btn btn-ghost" href="https://bwalletx.com/get">Get bWalletX</a></div>
+    <p class="small" id="from"></p>
+  </main>
+</div>
+<script src="https://unpkg.com/@bwalletx/connect@0.5.0/dist/bwalletx-connect.global.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="/bwx.js"></script>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const LABEL = { x: 'X', facebook: 'f', instagram: 'ig', linkedin: 'in', tiktok: 'tt', youtube: 'yt' };
+  const NAME = { x: 'X', facebook: 'Facebook', instagram: 'Instagram', linkedin: 'LinkedIn', tiktok: 'TikTok', youtube: 'YouTube' };
+  const short = (k) => k.slice(0, 6) + '…' + k.slice(-4);
+  const t = location.pathname.split('/i/')[1] || '';
+  let inv = null, done = false;
+  const gold = (key) => {
+    if (done || !key) return; done = true;
+    const r = $('ring'), b = $('badge');
+    r.classList.add('flip');
+    setTimeout(() => { b.className = 'badge b'; b.textContent = 'b'; }, 300);
+    $('title').textContent = "You're on b.";
+    $('lede').textContent = inv && key === inv.from
+      ? 'This is your own invite link. Send it to ' + inv.name + '.'
+      : 'Your badge is gold now. Bring your own friends next, or say hello on bChatX.';
+    $('ctas').innerHTML = '<a class="btn btn-gold" href="/friends">Bring your friends</a><a class="btn btn-ghost" href="https://bchatx.com">Open bChatX</a>';
+  };
+  fetch('/api/invite?t=' + encodeURIComponent(t)).then((r) => r.json().then((j) => [r.ok, j])).then(([ok, j]) => {
+    if (!ok) { $('lede').textContent = j.error || 'That invite link is broken.'; return; }
+    inv = j;
+    const b = $('badge'); b.className = 'badge ' + j.network; b.textContent = LABEL[j.network] || '?';
+    $('title').textContent = j.name.split(' ')[0] + ", you're invited.";
+    $('lede').innerHTML = 'A friend you know from <b>' + (NAME[j.network] || j.network) + '</b> is bringing you onto Bitcoin. Connect bWalletX and your badge turns into a gold b. Same friends, and nobody can take them off you.';
+    $('from').textContent = 'Invite from bWalletX identity ' + short(j.from) + '.';
+    fetch('/api/bwalletx/session', { credentials: 'same-origin' }).then((r) => r.json()).then((s) => gold(s.identityKey)).catch(() => {});
+  }).catch(() => { $('lede').textContent = "Couldn't check that invite. Try again."; });
+  document.addEventListener('bfriendsx-wallet', (e) => gold(e.detail.identityKey));
+})();
+</script>
+</body>
+</html>
