@@ -1,6 +1,26 @@
 {
   "cleanUrls": true,
   "redirects": [
-    { "source": "/:path*", "has": [{ "type": "host", "value": "www.bfriendsx.com" }], "destination": "https://bfriendsx.com/:path*", "permanent": true }
+    {
+      "source": "/flick-off",
+      "destination": "https://bmintx.com/flick-off",
+      "permanent": false
+    },
+    {
+      "source": "/flick-off/:path*",
+      "destination": "https://bmintx.com/flick-off/:path*",
+      "permanent": false
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.bfriendsx.com"
+        }
+      ],
+      "destination": "https://bfriendsx.com/:path*",
+      "permanent": true
+    }
   ]
 }
