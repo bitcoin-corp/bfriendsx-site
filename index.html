@@ -135,6 +135,21 @@ footer{padding:40px 0;color:var(--mute);font-size:13px}
 .note{margin:18px 0 0;font-size:13px;color:var(--mute)}
 @media(prefers-reduced-motion:reduce){.hero-slides div{animation:none}.hero-slides div:first-child{opacity:1}.reel{animation:none}.strip{overflow-x:auto}.fr,.wire{transition:none}.fc.flick,.fc.flick *{animation:none}}
 @media(max-width:640px){.src small{letter-spacing:.06em;font-size:9px}.fc{width:140px}.stamp{width:36px;height:36px;font-size:6.5px}.src{width:44px;height:44px;font-size:19px}.you{width:70px;height:70px}.fr{width:36px;height:36px;margin:-18px 0 0 -18px}.strip{margin-top:36px}}
+
+/* FLICK OFF badge: starts as the friend's network (X, Facebook, Instagram, TikTok, LinkedIn), flips to the gold bWalletX b on Bitcoin */
+.badge{position:absolute;right:8px;top:8px;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font:800 15px/1 'Space Grotesk';color:#fff;box-shadow:0 0 0 3px #0b0b0c,0 6px 16px rgba(0,0,0,.5);transition:background .3s;transform-style:preserve-3d}
+.badge[data-net=x]{background:#000;border:1px solid #444}.badge[data-net=x]::before{content:"𝕏"}
+.badge[data-net=fb]{background:#1877f2}.badge[data-net=fb]::before{content:"f";font-size:20px}
+.badge[data-net=ig]{background:radial-gradient(circle at 30% 110%,#fdf497 0%,#fd5949 45%,#d6249f 60%,#285aeb 90%)}.badge[data-net=ig]::before{content:"◎";font-size:17px}
+.badge[data-net=tt]{background:#010101;box-shadow:0 0 0 3px #0b0b0c,-2px -2px 0 3px #25f4ee,2px 2px 0 3px #fe2c55}.badge[data-net=tt]::before{content:"♪"}
+.badge[data-net=in]{background:#0a66c2}.badge[data-net=in]::before{content:"in";font-size:14px}
+.fc[data-s=on] .badge{background:linear-gradient(180deg,#ffe58a,#ffd24d 55%,#e0a800);border:0;box-shadow:0 0 0 3px #0b0b0c,0 0 18px rgba(255,210,77,.55)}
+.fc[data-s=on] .badge::before{content:"";width:18px;height:24px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='23 8 74 100'%3E%3Cmask id='h'%3E%3Crect width='140' height='140' fill='%23fff'/%3E%3Ccircle cx='60' cy='72' r='15' fill='%23000'/%3E%3C/mask%3E%3Cg fill='%23000' mask='url(%23h)'%3E%3Cpolygon points='45,12 45,76 27,76 27,30'/%3E%3Ccircle cx='60' cy='72' r='33'/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat}
+.fc.flick .badge{animation:bflip .6s cubic-bezier(.3,1.4,.5,1)}
+@keyframes bflip{0%{transform:rotateY(0) scale(1)}50%{transform:rotateY(90deg) scale(1.25)}100%{transform:rotateY(0) scale(1)}}
+.fc[data-s=on]{border-color:rgba(255,210,77,.45)}
+.fc[data-s=on] .chip{background:rgba(255,210,77,.12);border-color:rgba(255,210,77,.5);color:var(--gold)}
+@media(max-width:640px){.badge{width:32px;height:32px;font-size:13px}}
 </style>
 </head>
 <body>
@@ -252,14 +267,17 @@ footer{padding:40px 0;color:var(--mute);font-size:13px}
   }
 
   // REEL: one line across the bottom of the hero; cards flick from "on X" to "on bChatX"
-  const lab = { on: 'on bChatX ✓', inv: 'invite sent', x: 'on X' };
+  const NETS = ['x','fb','ig','tt','in'], NETN = { x: 'X', fb: 'Facebook', ig: 'Instagram', tt: 'TikTok', in: 'LinkedIn' };
+  const net = (i) => NETS[(i * 7 + 3) % NETS.length];
+  const lab = { on: 'on Bitcoin ✓', inv: 'invite sent', x: 'on X' };
+  const labOf = (s, i) => (s === 'x' ? 'on ' + NETN[net(i)] : lab[s]);
   const st = (i) => (i % 3 === 0 ? 'on' : i % 5 === 1 ? 'inv' : 'x');
-  const card = (p, i) => `<div class="fc${p[3] ? ' nft' : ''}" data-i="${i}" data-s="${st(i)}"><div class="ph">${img(p)}${p[3] ? '<span class="nft-t">NFT</span>' : ''}<span class="stamp">ON<br>bCHATX</span></div><div class="meta"><b>${p[0]}</b><span>@${p[1]}</span><em class="chip">${lab[st(i)]}</em></div></div>`;
+  const card = (p, i) => `<div class="fc${p[3] ? ' nft' : ''}" data-i="${i}" data-s="${st(i)}"><div class="ph">${img(p)}${p[3] ? '<span class="nft-t">NFT</span>' : ''}<span class="badge" data-net="${net(i)}" aria-hidden="true"></span></div><div class="meta"><b>${p[0]}</b><span>@${p[1]}</span><em class="chip">${labOf(st(i), i)}</em></div></div>`;
   const reel = document.getElementById('reel'), strip = reel.parentElement;
   const h = people.map(card).join(''); reel.innerHTML = h + h;
   let paused = false;
   strip.addEventListener('mouseenter', () => (paused = true)); strip.addEventListener('mouseleave', () => (paused = false));
-  const setS = (i, s, anim) => reel.querySelectorAll(`.fc[data-i="${i}"]`).forEach((c) => { c.dataset.s = s; c.querySelector('.chip').textContent = lab[s]; if (anim) { c.classList.remove('flick'); void c.offsetWidth; c.classList.add('flick'); } });
+  const setS = (i, s, anim) => reel.querySelectorAll(`.fc[data-i="${i}"]`).forEach((c) => { c.dataset.s = s; c.querySelector(".chip").textContent = labOf(s, i); if (anim) { c.classList.remove('flick'); void c.offsetWidth; c.classList.add('flick'); } });
   if (!reduce) setInterval(() => {
     if (paused || document.hidden) return;
     const vw = innerWidth, xs = [...reel.querySelectorAll('.fc[data-s=x]')].filter((c) => { const r = c.getBoundingClientRect(); return r.left > vw * .1 && r.right < vw * .9; });
