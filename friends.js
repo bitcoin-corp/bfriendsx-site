@@ -11,6 +11,7 @@ let all = [];             // Friend[] from every export opened so far
 const picked = new Set(); // indexes into `all`
 const shown = new Set(Object.keys(NAME));
 let me = null;
+let onb = new Set();      // indexes into `all` of friends already on b (linked their handle)
 let claimed = new Set(); // network + '\n' + name of friends who accepted your invite
 
 // ── reading exports ──
@@ -32,7 +33,22 @@ async function open(list) {
       $('readErr').textContent = `Couldn't read ${file.name}. Use the .zip file exactly as the network sent it.`;
     }
   }
-  if (added) render();
+  if (added) { render(); lookup(); }
+}
+// light up X friends who linked their account to a bWalletX (bmintx.com/link/x)
+async function lookup() {
+  if (!me) return;
+  const xs = all.map((f, i) => [f, i]).filter(([f]) => f.network === 'x');
+  if (!xs.length) return;
+  for (let k = 0; k < xs.length; k += 5000) {
+    const part = xs.slice(k, k + 5000);
+    const r = await fetch('/api/onb', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ x: part.map(([f]) => f.key) }) }).catch(() => null);
+    const j = r && r.ok ? await r.json() : { x: {} };
+    for (const [f, i] of part) { const h = j.x[f.key]; if (h) { f.handle = h.handle; f.name = '@' + h.handle; onb.add(i); } }
+  }
+  const n = onb.size;
+  $('onbX').textContent = n ? `${n.toLocaleString()} of your X follows ${n === 1 ? 'is' : 'are'} already on b.` : '';
+  render();
 }
 $('files').onchange = (e) => open([...e.target.files]);
 const drop = $('drop');
@@ -52,7 +68,7 @@ function render() {
   $('nets').innerHTML = Object.keys(by).map((n) => `<button class="chip" type="button" data-n="${n}" aria-pressed="${shown.has(n)}"><span class="badge ${n}">${LABEL[n]}</span>${NAME[n]}</button>`).join('');
   const rows = visible();
   const CAP = 1000;
-  $('list').innerHTML = rows.slice(0, CAP).map(([f, i]) => `<li><label><input type="checkbox" data-i="${i}" ${picked.has(i) ? 'checked' : ''}>${claimed.has(f.network + '\n' + f.name) ? '<span class="badge b" title="On b: accepted your invite">b</span>' : `<span class="badge ${f.network}">${LABEL[f.network]}</span>`}<span class="nm">${esc(f.name)}${f.handle && f.handle !== f.name ? ` <span class="small">@${esc(f.handle)}</span>` : ''}</span></label><span class="meta">${esc(REL[f.relation])}${f.since ? ' · ' + f.since.slice(0, 4) : ''}</span></li>`).join('')
+  $('list').innerHTML = rows.slice(0, CAP).map(([f, i]) => `<li><label><input type="checkbox" data-i="${i}" ${picked.has(i) ? 'checked' : ''}>${claimed.has(f.network + '\n' + f.name) || onb.has(i) ? '<span class="badge b" title="On b: accepted your invite">b</span>' : `<span class="badge ${f.network}">${LABEL[f.network]}</span>`}<span class="nm">${esc(f.name)}${f.handle && f.handle !== f.name ? ` <span class="small">@${esc(f.handle)}</span>` : ''}</span></label><span class="meta">${esc(REL[f.relation])}${f.since ? ' · ' + f.since.slice(0, 4) : ''}</span></li>`).join('')
     + (rows.length > CAP ? `<li class="small">and ${(rows.length - CAP).toLocaleString()} more. Search to find them.</li>` : '');
   const d = suggestMerges(all);
   $('dupes').textContent = d.length ? `${d.length} ${d.length === 1 ? 'person appears' : 'people appear'} on more than one network, e.g. ${d.slice(0, 3).map((g) => g[0].name).join(', ')}. Each gets one invite per network you pick.` : '';
@@ -111,6 +127,8 @@ const loadClaims = () => fetch('/api/claims', { credentials: 'same-origin' }).th
   $('onb').textContent = j.claims.length ? `${j.claims.length.toLocaleString()} ${j.claims.length === 1 ? 'friend has' : 'friends have'} joined you on b.` : '';
   if (all.length) render();
 }).catch(() => {});
-const setMe = (k) => { me = k || null; count(); if (me) loadClaims(); };
+const setMe = (k) => { me = k || null; count(); if (me) { loadClaims(); if (all.length) lookup(); } };
+const h = new URLSearchParams(location.hash.slice(1));
+if (h.get('linked') === 'x') $('onb').textContent = `@${h.get('handle')} is linked. Friends who bring their X follows will find you.`;
 document.addEventListener('bfriendsx-wallet', (e) => setMe(e.detail.identityKey));
 fetch('/api/bwalletx/session', { credentials: 'same-origin' }).then((r) => r.json()).then((j) => setMe(j.identityKey)).catch(() => {});
