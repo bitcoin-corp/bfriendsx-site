@@ -6,3 +6,4 @@ media-src/raw/
 media-src/incoming/*
 !media-src/incoming/README.txt
 media-src/tools/work/
+design-preview/
