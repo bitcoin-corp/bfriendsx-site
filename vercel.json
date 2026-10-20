@@ -2,6 +2,11 @@
   "cleanUrls": true,
   "redirects": [
     {
+      "source": "/link/x",
+      "destination": "https://bmintx.com/link/x?return=bfriendsx",
+      "permanent": false
+    },
+    {
       "source": "/flick-off",
       "destination": "https://bmintx.com/flick-off",
       "permanent": false
