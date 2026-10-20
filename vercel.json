@@ -26,7 +26,7 @@
   "rewrites": [
     {
       "source": "/i/:t",
-      "destination": "/invite.html"
+      "destination": "/invite"
     }
   ]
 }
