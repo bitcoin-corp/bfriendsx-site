@@ -63,7 +63,7 @@ footer{padding:40px 0;color:var(--mute);font-size:13px}
 .bwx-btn{border-color:rgba(90,216,255,.45)!important;color:var(--blue)!important}
 .bwx-btn.on{background:linear-gradient(180deg,#a8ecff,#5ad8ff 60%,#21a9d6)!important;color:#001018!important}
 /* hero stage: friends travel from X to you */
-.stage{position:relative;aspect-ratio:1/1;max-width:520px;width:100%;margin:0 auto;border-radius:28px;background:radial-gradient(120% 90% at 70% 50%,rgba(90,216,255,.07),transparent 60%),#050607;border:1px solid var(--line);overflow:hidden}
+.stage{position:relative;aspect-ratio:1/1;max-width:520px;width:100%;margin:0 auto;border-radius:28px;background:radial-gradient(120% 90% at 70% 50%,rgba(90,216,255,.07),transparent 60%),rgba(5,6,7,.72);border:1px solid var(--line);overflow:hidden;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .stage::before{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(244,241,232,.07) 1px,transparent 1px);background-size:22px 22px;mask-image:radial-gradient(80% 70% at 60% 50%,#000,transparent)}
 .stage svg.wires{position:absolute;inset:0;width:100%;height:100%}
 .wire{fill:none;stroke:rgba(90,216,255,.0);stroke-width:1.2;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset .7s cubic-bezier(.2,.8,.2,1),stroke .4s}
@@ -71,9 +71,9 @@ footer{padding:40px 0;color:var(--mute);font-size:13px}
 .wire.inv{stroke-dashoffset:0;stroke:rgba(255,210,77,.35)}
 .src{position:absolute;left:12%;top:50%;transform:translate(-50%,-50%);width:52px;height:52px;border-radius:14px;background:#0e0f10;border:1px solid rgba(244,241,232,.14);display:grid;place-items:center;font:700 22px 'Space Grotesk';color:#f4f1e8;z-index:3}
 .src small,.you small{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);font:600 10px 'Space Grotesk';letter-spacing:.16em;text-transform:uppercase;color:var(--mute);white-space:nowrap}
-.you{position:absolute;left:63%;top:50%;transform:translate(-50%,-50%);width:84px;height:84px;border-radius:50%;background:linear-gradient(180deg,#ffe58a,#ffd24d 55%,#e0a800);display:grid;place-items:center;font:700 17px 'Space Grotesk';color:#000;box-shadow:0 0 0 8px rgba(255,210,77,.08),0 0 60px rgba(255,210,77,.3);z-index:3}
+.you{position:absolute;left:61%;top:50%;transform:translate(-50%,-50%);width:84px;height:84px;border-radius:50%;background:linear-gradient(180deg,#ffe58a,#ffd24d 55%,#e0a800);display:grid;place-items:center;font:700 17px 'Space Grotesk';color:#000;box-shadow:0 0 0 8px rgba(255,210,77,.08),0 0 60px rgba(255,210,77,.3);z-index:3}
 .you small{color:var(--gold)}
-.ring{position:absolute;left:63%;top:50%;width:62%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;border:1px dashed rgba(90,216,255,.14)}
+.ring{position:absolute;left:61%;top:50%;width:56%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;border:1px dashed rgba(90,216,255,.14)}
 .fr{position:absolute;left:12%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;z-index:2;opacity:0;transform:scale(.4);transition:left .9s cubic-bezier(.2,.8,.2,1),top .9s cubic-bezier(.2,.8,.2,1),transform .9s cubic-bezier(.2,.8,.2,1),opacity .3s,box-shadow .4s}
 .fr svg{width:100%;height:100%;border-radius:50%;display:block}
 .fr.go{opacity:1;transform:scale(1)}
@@ -90,33 +90,49 @@ footer{padding:40px 0;color:var(--mute);font-size:13px}
 .legend b{width:8px;height:8px;border-radius:50%;display:inline-block}
 .count{position:absolute;left:16px;top:14px;font:500 12px ui-monospace,Menlo,monospace;color:var(--mute);z-index:3}
 .count em{font-style:normal;color:var(--blue)}
-/* friends reel */
-.reel-sec{padding:72px 0;overflow:hidden}
-.reel-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:16px;margin-bottom:28px}
-.reel-head p{margin:0;color:var(--mute);max-width:420px;font-size:15px}
-.reel{position:relative;mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
-.row{display:flex;gap:14px;width:max-content;padding:7px 0;animation:slide 70s linear infinite}
-.row.rev{animation-direction:reverse;animation-duration:80s}
-.reel:hover .row{animation-play-state:paused}
-@keyframes slide{to{transform:translateX(-50%)}}
-.fc{flex:none;width:292px;display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:#0b0b0c;border:1px solid rgba(244,241,232,.08);transition:border-color .4s,background .4s}
-.fc svg{width:44px;height:44px;border-radius:50%;flex:none}
-.fc .nm{min-width:0;flex:1}
-.fc .nm b{display:block;font:600 15px/1.2 'Space Grotesk';white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fc .nm span{display:block;font-size:12.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.chip{flex:none;font:600 11px/1 'Space Grotesk';letter-spacing:.02em;padding:6px 9px;border-radius:999px;white-space:nowrap;border:1px solid rgba(244,241,232,.14);color:#cfcabd}
-.fc[data-s=on]{border-color:rgba(90,216,255,.28)}
-.fc[data-s=on] .chip{background:rgba(90,216,255,.12);border-color:rgba(90,216,255,.4);color:var(--blue)}
-.fc[data-s=inv] .chip{border-color:rgba(255,210,77,.35);color:var(--gold)}
-.fc.flick{animation:flick .7s cubic-bezier(.2,.8,.2,1)}
+/* hero backdrop: cycling photos of friends, darkened for legibility */
+.hero{background:#000}
+.hero-slides{position:absolute;inset:0;z-index:0;pointer-events:none}
+.hero-slides div{position:absolute;inset:0;background:center/cover no-repeat;opacity:0;animation:hslide 21s infinite}
+.hero-slides div:nth-child(1){background-image:url(/img/hero/h1.webp)}
+.hero-slides div:nth-child(2){background-image:url(/img/hero/h2.webp);animation-delay:7s}
+.hero-slides div:nth-child(3){background-image:url(/img/hero/h3.webp);animation-delay:14s}
+@keyframes hslide{0%{opacity:0;transform:scale(1.04)}5%{opacity:1}33%{opacity:1}39%,100%{opacity:0;transform:scale(1)}}
+.hero::after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:linear-gradient(90deg,rgba(0,0,0,.93) 0%,rgba(0,0,0,.76) 48%,rgba(0,0,0,.5) 100%),linear-gradient(0deg,#000 0%,rgba(0,0,0,0) 38%),linear-gradient(180deg,rgba(0,0,0,.6) 0%,rgba(0,0,0,0) 22%)}
+@media(max-width:900px){.hero::after{background:linear-gradient(180deg,rgba(0,0,0,.72),rgba(0,0,0,.86) 50%,#000)}}
+.hero .wrap,.hero .strip,.hero .note-w{position:relative;z-index:1}
+/* graph friends are real avatars now */
+.fr img{width:100%;height:100%;border-radius:50%;display:block;object-fit:cover;background:#111}
+.fr.inv img{filter:saturate(.4) brightness(.78)}
+/* the reel: one line of friend cards rolling across the bottom of the hero */
+.strip{margin-top:48px;overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent)}
+.reel{display:flex;gap:14px;width:max-content;padding:8px 0;animation:roll 75s linear infinite}
+.strip:hover .reel{animation-play-state:paused}
+@keyframes roll{to{transform:translateX(-50%)}}
+.fc{flex:none;width:170px;border-radius:18px;overflow:hidden;background:rgba(11,11,12,.92);border:1px solid rgba(244,241,232,.1);transition:border-color .4s;position:relative}
+.fc .ph{position:relative;aspect-ratio:1;background:#111}
+.fc .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.fc.nft .ph{background:radial-gradient(circle at 50% 40%,#1b1230,#07060a)}
+.fc.nft .ph{padding:7%}.fc.nft .ph img{object-fit:contain}
+.fc .nft-t{position:absolute;left:8px;top:8px;font:700 9.5px/1 'Space Grotesk';letter-spacing:.12em;background:rgba(0,0,0,.7);color:#e9b8ff;border:1px solid rgba(233,184,255,.35);padding:4px 6px;border-radius:6px}
+.fc .meta{padding:10px 12px 12px}
+.fc .meta b{display:block;font:600 14.5px/1.2 'Space Grotesk';white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fc .meta span{display:block;font-size:12px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:8px}
+.chip{display:inline-block;font:600 11px/1 'Space Grotesk';letter-spacing:.02em;padding:6px 9px;border-radius:999px;white-space:nowrap;border:1px solid rgba(244,241,232,.16);color:#cfcabd}
+.fc[data-s=on]{border-color:rgba(90,216,255,.35)}
+.fc[data-s=on] .chip{background:rgba(90,216,255,.12);border-color:rgba(90,216,255,.45);color:var(--blue)}
+.fc[data-s=inv] .chip{border-color:rgba(255,210,77,.4);color:var(--gold)}
+.stamp{position:absolute;right:8px;top:8px;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;text-align:center;font:700 7.5px/1.05 'Space Grotesk';letter-spacing:.06em;color:#001018;background:radial-gradient(circle,#a8ecff,#5ad8ff 60%,#21a9d6);box-shadow:0 0 0 2px #ffd24d,0 0 0 4px rgba(0,0,0,.6),0 6px 20px rgba(0,0,0,.5);opacity:0;transform:scale(1.8) rotate(-18deg)}
+.fc[data-s=on] .stamp{opacity:1;transform:rotate(-12deg)}
+.fc.flick .stamp{animation:stamp .5s cubic-bezier(.3,1.5,.5,1)}
 .fc.flick .chip{animation:chipflip .5s cubic-bezier(.2,.8,.2,1)}
-.fc.flick svg{animation:ping .9s ease-out}
-@keyframes flick{0%{background:#0b0b0c}30%{background:#07202a;transform:translateY(-3px)}100%{background:#0b0b0c;transform:none}}
+.fc.flick{animation:ping 1s ease-out}
+@keyframes stamp{0%{opacity:0;transform:scale(1.8) rotate(-30deg)}100%{opacity:1;transform:rotate(-12deg)}}
 @keyframes chipflip{0%{transform:rotateX(0)}50%{transform:rotateX(90deg)}100%{transform:rotateX(0)}}
-@keyframes ping{0%{box-shadow:0 0 0 0 rgba(90,216,255,.7)}100%{box-shadow:0 0 0 14px rgba(90,216,255,0)}}
-.note{margin-top:18px;font-size:13px;color:var(--mute)}
-@media(prefers-reduced-motion:reduce){.row{animation:none}.reel{overflow-x:auto}.fr,.wire{transition:none}}
-@media(max-width:640px){.src small{letter-spacing:.06em;font-size:9px}.fc{width:264px}.src{width:44px;height:44px;font-size:19px}.you{width:70px;height:70px}.fr{width:38px;height:38px;margin:-19px 0 0 -19px}}
+@keyframes ping{0%{box-shadow:0 0 0 0 rgba(90,216,255,.6)}100%{box-shadow:0 0 0 16px rgba(90,216,255,0)}}
+.note{margin:18px 0 0;font-size:13px;color:var(--mute)}
+@media(prefers-reduced-motion:reduce){.hero-slides div{animation:none}.hero-slides div:first-child{opacity:1}.reel{animation:none}.strip{overflow-x:auto}.fr,.wire{transition:none}.fc.flick,.fc.flick *{animation:none}}
+@media(max-width:640px){.src small{letter-spacing:.06em;font-size:9px}.fc{width:140px}.stamp{width:36px;height:36px;font-size:6.5px}.src{width:44px;height:44px;font-size:19px}.you{width:70px;height:70px}.fr{width:36px;height:36px;margin:-18px 0 0 -18px}.strip{margin-top:36px}}
 </style>
 </head>
 <body>
@@ -141,6 +157,7 @@ footer{padding:40px 0;color:var(--mute);font-size:13px}
 
 <main>
 <section class="hero">
+  <div class="hero-slides" aria-hidden="true"><div></div><div></div><div></div></div>
   <div class="wrap">
     <div>
       <p class="eyebrow">Part of FLICK OFF</p>
@@ -151,15 +168,8 @@ footer{padding:40px 0;color:var(--mute);font-size:13px}
     </div>
     <div class="stage" id="stage" role="img" aria-label="Illustration: friends arrive from X and connect to you; some are already on bChatX, the rest get an invite."><svg class="wires" id="wires" viewBox="0 0 100 100" preserveAspectRatio="none"></svg><div class="ring"></div><div class="count"><em id="cnt">0</em> already on bChatX</div><div class="src">X<small>your follows</small></div><div class="you">you<small>bWalletX</small></div><div class="legend"><span><b style="background:var(--blue)"></b>on bChatX</span><span><b style="background:var(--gold)"></b>invite sent</span></div></div>
   </div>
-</section>
-
-<section class="reel-sec" aria-labelledby="reelh">
-  <div class="wrap reel-head">
-    <div><p class="kicker">Your people, coming over</p><h2 id="reelh" style="margin:0">One by one, they flick.</h2></div>
-    <p>An illustration of how your list will look: everyone you follow, marked as already on bChatX, invited by you, or still on X. Names are made up.</p>
-  </div>
-  <div class="reel" id="reel" aria-hidden="true"><div class="row" id="r1"></div><div class="row rev" id="r2"></div></div>
-  <div class="wrap"><p class="note">Matching isn’t live yet. When it is, it will compare your follows against people who’ve linked their X to bWalletX, on your device, and show you the result.</p></div>
+  <div class="strip" aria-label="Illustration: a line of made-up friends from your X follows, flicking over to bChatX one by one"><div class="reel" id="reel" aria-hidden="true"></div></div>
+  <div class="wrap note-w"><p class="note">An illustration with made-up people. Matching isn’t live yet: when it is, it will compare your follows against people who’ve linked their X to bWalletX, on your device, and show you the result.</p></div>
 </section>
 
 <section id="me" aria-live="polite">
@@ -197,7 +207,7 @@ footer{padding:40px 0;color:var(--mute);font-size:13px}
 </section>
 </main>
 
-<footer class="wrap">bFriendsX · part of the bWalletX family · <a href="https://bmintx.com/flick-off">FLICK OFF</a> · <a href="https://bchatx.com">bChatX</a> · <a href="https://bwalletx.com/get">Get bWalletX</a></footer>
+<footer class="wrap">bFriendsX · part of the bWalletX family · <a href="https://bmintx.com/flick-off">FLICK OFF</a> · <a href="https://bchatx.com">bChatX</a> · <a href="https://bwalletx.com/get">Get bWalletX</a> · <a href="/img/CREDITS.md">Image credits</a></footer>
 
 <script src="https://unpkg.com/@bwalletx/connect@0.5.0/dist/bwalletx-connect.global.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -206,23 +216,23 @@ footer{padding:40px 0;color:var(--mute);font-size:13px}
 (() => {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const NS = 'http://www.w3.org/2000/svg';
-  // procedural avatar: seeded gradient disc, abstract geometric "face", initials
-  const hash = (s) => { let h = 2166136261; for (const c of s) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return h >>> 0; };
-  const avatar = (name) => {
-    const h = hash(name), a = h % 360, b = (a + 40 + (h >> 8) % 80) % 360, kind = (h >> 4) % 3, id = 'a' + h.toString(36);
-    const ini = name.split(' ').map((w) => w[0]).join('').slice(0, 2);
-    const shape = kind === 0 ? `<circle cx="34" cy="48" r="22" fill="#000" opacity=".16"/>` : kind === 1 ? `<path d="M0 46 L48 18 L48 48 L0 48Z" fill="#000" opacity=".16"/>` : `<rect x="-6" y="30" width="60" height="22" transform="rotate(-18 24 40)" fill="#fff" opacity=".1"/>`;
-    return `<svg viewBox="0 0 48 48" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(${a} 70% 62%)"/><stop offset="1" stop-color="hsl(${b} 65% 32%)"/></linearGradient></defs><rect width="48" height="48" fill="url(#${id})"/>${shape}<text x="24" y="29.5" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="16" fill="#fff" fill-opacity=".95">${ini}</text></svg>`;
-  };
+  // fictional friends: AI-generated photos of made-up people + Ninja Punk Girls avatars (see /img/CREDITS.md)
+  const P = (n) => '/img/people/p' + String(n).padStart(2, '0') + '.webp', N = (n) => '/img/nft/n' + String(n).padStart(2, '0') + '.webp';
+  const people = [
+    ['Ama Boateng','amab',P(1)],['Ruby Hex','rubyhex',N(1),1],['Cal Murphy','calmurph',P(2)],['Priya Dass','priyadraws',P(3)],['Kira Volt','kiravolt',N(2),1],['Hiro Sato','hirosato',P(4)],
+    ['Iris Navarro','irisnav',P(5)],['Nyx','nyx_npg',N(3),1],['Owen Price','owenp',P(6)],['June Ahn','juneahn',P(7)],['Sable Riot','sableriot',N(4),1],['Maya Lund','mayalund',P(8)],
+    ['Sami Haddad','samih',P(9)],['Echo Punk','echopunk',N(5),1],['Ike Duru','ikeduru',P(10)],['Lan Nguyen','lannguyen',P(11)],['Mika Static','mikastatic',N(6),1],['Rafa Lima','rafalima',P(12)],
+    ['Jinx Ember','jinxember',N(7),1],['Elif Aydin','elifa',P(13)],['Lux Venom','luxvenom',N(8),1],['Arlo Finch','arlof',P(14)],['Onyx Rae','onyxrae',N(9),1],['Zia Glitch','ziaglitch',N(10),1]];
+  const img = (p) => `<img src="${p[2]}" alt="" loading="lazy" decoding="async" width="256" height="256">`;
 
-  // HERO: friends arrive from X, connect to you, light up
+  // HERO GRAPH: friends arrive from X, connect to you, light up
   const stage = document.getElementById('stage'), wires = document.getElementById('wires'), cnt = document.getElementById('cnt');
-  const crowd = ['Ana Ruiz','Kai Osei','Mo Farah-Lind','Zoe Park','Ravi Menon','Lena Holt','Sol Ibarra','Ike Duru','June Ahn','Theo Marsh','Nia Cole','Pip Varga'];
-  const cx = 63, cy = 50, R = 31;
-  const slots = crowd.map((n, i) => { const t = (i / crowd.length) * Math.PI * 2 - Math.PI / 2; return { n, x: cx + Math.cos(t) * R, y: cy + Math.sin(t) * R, on: [0,1,3,4,6,8,9,11].includes(i) }; });
+  const crowd = [0,1,3,5,7,8,9,13,14,16,19,21].map((i) => people[i]);
+  const cx = 61, cy = 50, R = 28;
+  const slots = crowd.map((p, i) => { const t = (i / crowd.length) * Math.PI * 2 - Math.PI / 2; return { p, x: cx + Math.cos(t) * R, y: cy + Math.sin(t) * R, on: [0,1,3,4,6,8,9,11].includes(i) }; });
   let live = [], k = 0, here = 0;
   const place = (s, instant) => {
-    const d = document.createElement('div'); d.className = 'fr'; d.innerHTML = avatar(s.n) + '<i></i>'; stage.appendChild(d);
+    const d = document.createElement('div'); d.className = 'fr'; d.innerHTML = img(s.p) + '<i></i>'; stage.appendChild(d);
     const p = document.createElementNS(NS, 'path'); p.setAttribute('class', 'wire'); p.setAttribute('pathLength', '1');
     p.setAttribute('d', `M${s.x} ${s.y} L${cx} ${cy}`); wires.appendChild(p);
     const land = () => { d.style.left = s.x + '%'; d.style.top = s.y + '%'; d.classList.add('go'); };
@@ -239,24 +249,21 @@ footer{padding:40px 0;color:var(--mute);font-size:13px}
     setTimeout(tick, 400);
   }
 
-  // REEL: two rows, opposite directions; cards flick from "on X" to "on bChatX"
-  const people = [
-    ['Ama Boateng','amab'],['Felix Wren','felixwren'],['Priya Dass','priyadraws'],['Tomas Kehl','tkehl'],['Iris Navarro','irisnav'],['Dev Rao','devonchain'],['Hana Mori','hanamori'],['Luca Bianchi','lucab'],['Sade Okafor','sadeok'],['Owen Price','owenp'],['Mira Kovac','mirak'],['Jonah Reyes','jonahr'],
-    ['Elif Aydin','elifa'],['Bram de Wit','bramdw'],['Noor Haddad','noorh'],['Cal Murphy','calmurph'],['Yuki Tan','yukitan'],['Rosa Lima','rosalima'],['Ezra Stone','ezstone'],['Ines Duarte','inesd'],['Kofi Mensah','kofim'],['Maya Lund','mayalund'],['Arlo Finch','arlof'],['Tess Kim','tesskim']];
+  // REEL: one line across the bottom of the hero; cards flick from "on X" to "on bChatX"
   const lab = { on: 'on bChatX ✓', inv: 'invite sent', x: 'on X' };
-  const st = (i) => (i % 3 === 0 ? 'on' : i % 4 === 1 ? 'inv' : 'x');
-  const card = (p, i) => `<div class="fc" data-i="${i}" data-s="${st(i)}">${avatar(p[0])}<div class="nm"><b>${p[0]}</b><span>@${p[1]}</span></div><span class="chip">${lab[st(i)]}</span></div>`;
-  const fill = (el, list, off) => { const h = list.map((p, j) => card(p, j + off)).join(''); el.innerHTML = h + h; };
-  fill(document.getElementById('r1'), people.slice(0, 12), 0); fill(document.getElementById('r2'), people.slice(12), 12);
-  const reel = document.getElementById('reel'); let paused = false;
-  reel.addEventListener('mouseenter', () => (paused = true)); reel.addEventListener('mouseleave', () => (paused = false));
+  const st = (i) => (i % 3 === 0 ? 'on' : i % 5 === 1 ? 'inv' : 'x');
+  const card = (p, i) => `<div class="fc${p[3] ? ' nft' : ''}" data-i="${i}" data-s="${st(i)}"><div class="ph">${img(p)}${p[3] ? '<span class="nft-t">NFT</span>' : ''}<span class="stamp">ON<br>bCHATX</span></div><div class="meta"><b>${p[0]}</b><span>@${p[1]}</span><em class="chip">${lab[st(i)]}</em></div></div>`;
+  const reel = document.getElementById('reel'), strip = reel.parentElement;
+  const h = people.map(card).join(''); reel.innerHTML = h + h;
+  let paused = false;
+  strip.addEventListener('mouseenter', () => (paused = true)); strip.addEventListener('mouseleave', () => (paused = false));
   const setS = (i, s, anim) => reel.querySelectorAll(`.fc[data-i="${i}"]`).forEach((c) => { c.dataset.s = s; c.querySelector('.chip').textContent = lab[s]; if (anim) { c.classList.remove('flick'); void c.offsetWidth; c.classList.add('flick'); } });
   if (!reduce) setInterval(() => {
     if (paused || document.hidden) return;
-    const vw = innerWidth, xs = [...reel.querySelectorAll('.fc[data-s=x]')].filter((c) => { const r = c.getBoundingClientRect(); return r.left > vw * .12 && r.right < vw * .88; });
+    const vw = innerWidth, xs = [...reel.querySelectorAll('.fc[data-s=x]')].filter((c) => { const r = c.getBoundingClientRect(); return r.left > vw * .1 && r.right < vw * .9; });
     if (xs.length) setS(xs[(Math.random() * xs.length) | 0].dataset.i, 'on', true);
     else people.forEach((_, i) => setS(i, st(i), false));
-  }, 1800);
+  }, 1500);
 
   // once connected, show the welcome panel
   const showMe = (key) => { const s = document.getElementById('me'); if (!key) { s.classList.remove('show'); return; } document.getElementById('meKey').textContent = 'bWalletX identity · ' + key; s.classList.add('show'); };
