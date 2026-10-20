@@ -63,7 +63,7 @@
         },
       });
       const v = await post('/api/bwalletx/verify', { identityKey: r.identityKey, nonce: r.nonce, signature: r.signature, ticket });
-      key = v.identityKey; close(); draw();
+      key = v.identityKey; window.bfxWallet = r.wallet || null; close(); draw();   // keep the wallet for gift pots (gift.js)
       document.dispatchEvent(new CustomEvent('bfriendsx-wallet', { detail: { identityKey: key } }));
     } catch (e) {
       if (e && e.code === 'NOT_FOUND') {

@@ -52,6 +52,11 @@
   <section class="panel hidden" id="mine">
     <h2>Your FLICK ON link</h2>
     <div class="field"><input id="from" maxlength="40" placeholder="Your first name (so friends see who it's from)" aria-label="Your first name"><button class="btn btn-gold" id="make" type="button">Make my link</button></div>
+    <div class="field"><label class="small" for="gift" style="margin-right:6px">Leave a gift in it</label>
+      <select id="gift" style="background:#000;border:1px solid var(--line);border-radius:999px;color:var(--ink);padding:9px 14px;font:inherit">
+        <option value="0">No gift</option><option value="1000">1,000 sats (test)</option><option value="10000">10,000 sats</option><option value="100000">0.001 BSV</option><option value="1000000">0.01 BSV</option>
+      </select></div>
+    <p class="small" id="giftNote" hidden style="color:var(--gold)">A gift link is like cash: whoever opens it first can claim it. Send it to one person, privately, never in a public post. Your wallet pays the gift when you make the link. Open the link yourself to take it back if it isn't claimed.</p>
     <div class="hidden" id="out">
       <div class="linkbox"><code id="url"></code><button class="btn btn-ghost mini" id="copy" type="button">Copy</button><button class="btn btn-ghost mini hidden" id="share" type="button">Share</button></div>
       <div class="bar" style="margin-top:12px"><a class="btn btn-ghost mini" id="toX" target="_blank" rel="noopener">Post on X</a><a class="btn btn-ghost mini" id="toWa" target="_blank" rel="noopener">WhatsApp</a><a class="btn btn-ghost mini" id="toTg" target="_blank" rel="noopener">Telegram</a></div>
@@ -86,6 +91,7 @@
   };
   document.addEventListener('bfriendsx-wallet', (e) => setMe(e.detail.identityKey));
   fetch('/api/bwalletx/session', { credentials: 'same-origin' }).then((r) => r.json()).then((j) => setMe(j.identityKey)).catch(() => {});
+  $('gift').onchange = () => { $('giftNote').hidden = !+$('gift').value; };
   $('make').onclick = async () => {
     $('err').textContent = '';
     const from = $('from').value.trim();
@@ -93,7 +99,15 @@
     const r = await fetch('/api/invite', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ general: true, from }) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) { $('err').textContent = j.error || 'That didn’t work. Try again.'; return; }
-    const url = j.url, text = 'I’ve flicked off the old apps. Come and flick on with me:';
+    let url = j.url, text = 'I’ve flicked off the old apps. Come and flick on with me:';
+    const gift = +$('gift').value;
+    if (gift) {
+      $('make').disabled = true; $('make').textContent = 'Approve the gift in bWalletX…';
+      try { const g = await import('/gift.js'); url += '#' + await g.makeGift(gift); text = 'I’ve flicked off the old apps, and left you a gift. Come and flick on:'; }
+      catch (e) { $('err').textContent = 'No gift was made: ' + ((e && e.message) || 'the wallet said no.'); $('make').disabled = false; $('make').textContent = 'Make my link'; return; }
+      $('make').disabled = false; $('make').textContent = 'Make another link';
+    }
+    $('toX').classList.toggle('hidden', !!gift);   // a gift link must never go in a public post
     $('url').textContent = url; $('out').classList.remove('hidden');
     $('toX').href = 'https://x.com/intent/post?text=' + encodeURIComponent(text + ' ' + url);
     $('toWa').href = 'https://wa.me/?text=' + encodeURIComponent(text + ' ' + url);
