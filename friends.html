@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bring your friends · bFriendsX</title>
+<meta name="description" content="Open your Facebook, Instagram, LinkedIn or X export, pick who to bring, and send each of them a link. Read on your device; nothing is uploaded.">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/friends.css">
+</head>
+<body>
+<aside class="bwx-strip" aria-label="bWalletX"><a href="https://bwalletx.com"><svg viewBox="23 8 74 100" aria-hidden="true" focusable="false"><defs><linearGradient id="bwx-g" gradientUnits="userSpaceOnUse" x1="0" y1="12" x2="0" y2="105"><stop offset="0" stop-color="#FFE58A"/><stop offset=".55" stop-color="#FFD24D"/><stop offset="1" stop-color="#C98F00"/></linearGradient><mask id="bwx-m"><rect width="140" height="140" fill="#fff"/><circle cx="60" cy="72" r="15" fill="#000"/></mask></defs><g fill="url(#bwx-g)" mask="url(#bwx-m)"><polygon points="45,12 45,76 27,76 27,30"/><circle cx="60" cy="72" r="33"/></g></svg><span>Part of <b>bWalletX</b></span><span class="bwx-go" aria-hidden="true">&rarr;</span></a></aside>
+<div class="wrap">
+  <header class="nav"><a class="brand" href="/" aria-label="bFriendsX home"><img src="/logo.svg" width="28" height="28" alt=""><span>bFriends<span>X</span></span></a><span data-bwx></span></header>
+  <h1>Bring your friends.</h1>
+  <p class="lede">Open the data export from each network you use. You pick who to bring, and each person gets their own link. When they join bWalletX their badge turns into a gold&nbsp;b.</p>
+
+  <section class="panel" id="step1">
+    <h2>1. Open your exports</h2>
+    <label class="drop" id="drop"><input type="file" id="files" multiple accept=".zip,.csv,application/zip,text/csv"><b>Choose or drop your export files</b><br><span class="small">.zip files as the networks send them (LinkedIn's Connections.csv works too). Read on this device. Nothing is uploaded.</span></label>
+    <ul class="how">
+      <li><span class="badge facebook">f</span> <b>Facebook</b><br><span class="small">Settings → Download your information → Connections → Friends, format JSON.</span></li>
+      <li><span class="badge instagram">ig</span> <b>Instagram</b><br><span class="small">Accounts Centre → Download your information → Followers and following, format JSON.</span></li>
+      <li><span class="badge linkedin">in</span> <b>LinkedIn</b><br><span class="small">Settings → Data privacy → Get a copy of your data → Connections.</span></li>
+      <li><span class="badge x">X</span> <b>X</b><br><span class="small">Settings → Your account → Download an archive. X gives account numbers only, so names show later.</span></li>
+    </ul>
+    <p class="small err" id="readErr" role="alert"></p>
+  </section>
+
+  <section class="panel hidden" id="step2">
+    <h2>2. Pick who to bring</h2>
+    <p class="small" id="summary"></p>
+    <div class="bar"><input type="search" id="q" placeholder="Search names" aria-label="Search names"><div class="chips" id="nets"></div></div>
+    <div class="bar"><button class="btn btn-ghost mini" id="all" type="button">Select all shown</button><button class="btn btn-ghost mini" id="none" type="button">Clear</button><span class="small" id="picked">0 picked</span></div>
+    <ul class="list" id="list"></ul>
+    <p class="small" id="dupes"></p>
+  </section>
+
+  <section class="panel hidden" id="step3">
+    <h2>3. Send the links</h2>
+    <p class="small" id="needWallet">Connect bWalletX first, so your friends know the invites are from you.</p>
+    <div class="bar"><button class="btn btn-blue" id="make" type="button" disabled>Make invite links</button><button class="btn btn-ghost mini hidden" id="copyAll" type="button">Copy all</button></div>
+    <p class="small err" id="makeErr" role="alert"></p>
+    <ul class="list links" id="links"></ul>
+    <p class="small">Each link only says your bWalletX identity, their name and where you know them from. Email addresses never leave this device: the email buttons open your own mail app.</p>
+  </section>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://unpkg.com/@bwalletx/connect@0.5.0/dist/bwalletx-connect.global.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="/bwx.js"></script>
+<script type="module" src="/friends.js"></script>
+</body>
+</html>
