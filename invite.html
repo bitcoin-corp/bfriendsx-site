@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>You're invited · bFriendsX</title>
+<title>You’ve been flicked on · bFriendsX</title>
 <meta name="description" content="A friend is bringing you onto Bitcoin. Join bWalletX and get your gold b.">
-<meta property="og:title" content="A friend is bringing you to Bitcoin">
-<meta property="og:description" content="Join bWalletX, keep your friends, and get your gold b.">
+<meta property="og:title" content="You’ve been flicked on">
+<meta property="og:description" content="A friend is switching you on to Bitcoin. Same friends, and this time nobody can take them off you.">
 <meta property="og:image" content="https://bfriendsx.com/og-bfriendsx-v1.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="robots" content="noindex">
@@ -24,7 +24,8 @@
   <header class="nav"><a class="brand" href="/" aria-label="bFriendsX home"><img src="/logo.svg" width="28" height="28" alt=""><span>bFriends<span>X</span></span></a></header>
   <main class="center" id="main">
     <div class="ring" id="ring"><span class="badge" id="badge">?</span></div>
-    <h1 id="title">You're invited.</h1>
+    <p class="eyebrow" style="font:600 13px 'Space Grotesk';letter-spacing:.18em;color:var(--gold);margin:0 0 6px">FLICK ON</p>
+    <h1 id="title">You’ve been flicked on.</h1>
     <p class="lede" id="lede">Checking your invite…</p>
     <div class="ctas" id="ctas"><span data-bwx></span><a class="btn btn-ghost" href="https://bwalletx.com/get">Get bWalletX</a></div>
     <p class="small" id="from"></p>
@@ -38,6 +39,7 @@
   const $ = (id) => document.getElementById(id);
   const LABEL = { telegram: 'tg', x: 'X', facebook: 'f', instagram: 'ig', linkedin: 'in', tiktok: 'tt', youtube: 'yt' };
   const NAME = { telegram: 'Telegram', x: 'X', facebook: 'Facebook', instagram: 'Instagram', linkedin: 'LinkedIn', tiktok: 'TikTok', youtube: 'YouTube' };
+  const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   const short = (k) => k.slice(0, 6) + '…' + k.slice(-4);
   const t = location.pathname.split('/i/')[1] || '';
   let inv = null, done = false;
@@ -47,18 +49,25 @@
     r.classList.add('flip');
     if (inv && key !== inv.from) fetch('/api/claims', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ t }) }).catch(() => {});
     setTimeout(() => { b.className = 'badge b'; b.textContent = 'b'; }, 300);
-    $('title').textContent = "You're on b.";
+    $('title').textContent = 'You’re on.';
     $('lede').textContent = inv && key === inv.from
-      ? 'This is your own invite link. Send it to ' + inv.name + '.'
+      ? (inv.network === 'link' ? 'This is your own FLICK ON link. Post it anywhere.' : 'This is your own invite link. Send it to ' + inv.name + '.')
       : 'Your badge is gold now. Bring your own friends next, or say hello on bChatX.';
     $('ctas').innerHTML = '<a class="btn btn-gold" href="/friends">Bring your friends</a><a class="btn btn-ghost" href="https://bchatx.com">Open bChatX</a>';
   };
   fetch('/api/invite?t=' + encodeURIComponent(t)).then((r) => r.json().then((j) => [r.ok, j])).then(([ok, j]) => {
     if (!ok) { $('lede').textContent = j.error || 'That invite link is broken.'; return; }
     inv = j;
-    const b = $('badge'); b.className = 'badge ' + j.network; b.textContent = LABEL[j.network] || '?';
-    $('title').textContent = j.name.split(' ')[0] + ", you're invited.";
-    $('lede').innerHTML = 'A friend you know from <b>' + (NAME[j.network] || j.network) + '</b> is bringing you onto Bitcoin. Connect bWalletX and your badge turns into a gold b. Same friends, and nobody can take them off you.';
+    const b = $('badge'), who = j.fromName ? esc(j.fromName) : 'A friend';
+    if (j.network === 'link') {
+      b.className = 'badge'; b.style.cssText = 'border:3px solid var(--gold);color:var(--gold);background:none'; b.textContent = 'on';
+      $('title').textContent = j.fromName ? j.fromName + ' flicked you on.' : 'You’ve been flicked on.';
+      $('lede').innerHTML = who + ' is switching you on to Bitcoin. Connect bWalletX and your badge turns gold. Same friends, and this time nobody can take them off you.';
+    } else {
+      b.className = 'badge ' + j.network; b.textContent = LABEL[j.network] || '?';
+      $('title').textContent = j.name.split(' ')[0] + ', you’ve been flicked on.';
+      $('lede').innerHTML = who + ' you know from <b>' + (NAME[j.network] || j.network) + '</b> is switching you on to Bitcoin. Connect bWalletX and your badge turns gold. Same friends, and this time nobody can take them off you.';
+    }
     $('from').textContent = 'Invite from bWalletX identity ' + short(j.from) + '.';
     fetch('/api/bwalletx/session', { credentials: 'same-origin' }).then((r) => r.json()).then((s) => gold(s.identityKey)).catch(() => {});
   }).catch(() => { $('lede').textContent = "Couldn't check that invite. Try again."; });

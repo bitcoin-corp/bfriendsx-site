@@ -1,5 +1,6 @@
-// Invite links for friends imported from another network.
+// Invite links for friends imported from another network, and your one FLICK ON link for everyone else.
 //   POST /api/invite { friends: [{ name, network }] }  (signed in)  -> { links: [{ name, network, url }] }
+//   POST /api/invite { general: true, from: "Richard" } (signed in) -> { url }   one link to post anywhere
 //   GET  /api/invite?t=<token>                                      -> { from, name, network, at }
 // No database: each link carries its invite sealed (AES-256-GCM) so it can't be read or forged. Only a name and
 // a network go in. Emails and other contact details stay in the inviter's browser and are never sent here.
@@ -33,13 +34,18 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     const d = open(s, req.query?.t ?? new URL(req.url, ORIGIN).searchParams.get('t'));
     if (!d) return res.status(404).json({ error: 'That invite link is broken or was cut short.' });
-    return res.status(200).json({ from: d.f, name: d.n, network: d.w, at: d.t });
+    return res.status(200).json({ from: d.f, fromName: d.s || null, name: d.n, network: d.w, at: d.t });
   }
   if (req.method !== 'POST') return res.status(405).end();
   if (!originOk(req.headers.origin)) return res.status(403).json({ error: 'Wrong origin.' });
   const me = await verifySession(readCookie(req.headers.cookie, 'bwx_session'), { secret: s });
   if (!me?.sub) return res.status(401).json({ error: 'Connect bWalletX first, so your friends know the invite is from you.' });
-  const list = (await body(req)).friends;
+  const b = await body(req);
+  if (b.general) {
+    const from = clean(b.from).slice(0, 40);
+    return res.status(200).json({ url: `${ORIGIN}/i/${seal(s, { f: me.sub, n: '', w: 'link', t: Date.now(), ...(from ? { s: from } : {}) })}` });
+  }
+  const list = b.friends;
   if (!Array.isArray(list) || !list.length) return res.status(400).json({ error: 'No friends picked.' });
   if (list.length > MAX) return res.status(400).json({ error: `Up to ${MAX} invites at a time.` });
   const t = Date.now();

@@ -24,7 +24,7 @@ export default async function handler(req, res) {
   if (d.f === me) return res.status(200).json({ claimed: false, own: true });
   const r = await q('bfriendsx_claims?on_conflict=inviter_key,invitee_key,network', {
     method: 'POST', headers: { prefer: 'resolution=ignore-duplicates,return=minimal' },
-    body: JSON.stringify({ inviter_key: d.f, invitee_key: me, network: d.w, name: d.n, invited_at: new Date(d.t).toISOString() }),
+    body: JSON.stringify({ inviter_key: d.f, invitee_key: me, network: d.w, name: d.n || 'Your FLICK ON link', invited_at: new Date(d.t).toISOString() }),
   });
   if (!r.ok) return res.status(502).json({ error: 'Could not record that. Try again.' });
   return res.status(200).json({ claimed: true });

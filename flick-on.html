@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FLICK ON · bFriendsX</title>
+<meta name="description" content="Flick your friends on: one link to post anywhere. Everyone who joins through it turns gold, and lands in your friends.">
+<link rel="canonical" href="https://bfriendsx.com/flick-on">
+<meta property="og:title" content="FLICK ON">
+<meta property="og:description" content="Flick off the old apps. Flick on your friends.">
+<meta property="og:image" content="https://bfriendsx.com/og-bfriendsx-v1.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/friends.css">
+<style>
+.hero{text-align:center;max-width:640px;margin:0 auto;padding:12px 0 8px}
+.hero .lede{margin-left:auto;margin-right:auto}
+.switch{width:120px;height:64px;border-radius:999px;border:2px solid var(--gold);margin:18px auto 8px;position:relative;cursor:pointer;background:#000;transition:background .3s}
+.switch::after{content:'';position:absolute;top:6px;left:6px;width:48px;height:48px;border-radius:50%;background:#333;transition:transform .35s cubic-bezier(.2,.8,.2,1),background .3s}
+.switch.on{background:rgba(255,210,77,.12)}.switch.on::after{transform:translateX(56px);background:linear-gradient(180deg,#ffe58a,#ffd24d 55%,#c98f00)}
+@media (prefers-reduced-motion:reduce){.switch,.switch::after{transition:none}}
+.eyebrow{font:600 13px 'Space Grotesk';letter-spacing:.18em;color:var(--gold);margin:0}
+.linkbox{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.linkbox code{flex:1 1 220px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:#000;border:1px solid var(--line);border-radius:12px;padding:12px;font-size:13px;color:#d8d3c5}
+.qr{background:#fff;border-radius:12px;padding:10px;width:max-content;margin:14px auto 0}
+.field{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 14px}
+.field input{flex:1 1 200px;background:#000;border:1px solid var(--line);border-radius:999px;color:var(--ink);padding:10px 16px;font:inherit}
+</style>
+</head>
+<body>
+<aside class="bwx-strip" aria-label="bWalletX"><a href="https://bwalletx.com"><svg viewBox="23 8 74 100" aria-hidden="true" focusable="false"><defs><linearGradient id="bwx-g" gradientUnits="userSpaceOnUse" x1="0" y1="12" x2="0" y2="105"><stop offset="0" stop-color="#FFE58A"/><stop offset=".55" stop-color="#FFD24D"/><stop offset="1" stop-color="#C98F00"/></linearGradient><mask id="bwx-m"><rect width="140" height="140" fill="#fff"/><circle cx="60" cy="72" r="15" fill="#000"/></mask></defs><g fill="url(#bwx-g)" mask="url(#bwx-m)"><polygon points="45,12 45,76 27,76 27,30"/><circle cx="60" cy="72" r="33"/></g></svg><span>Part of <b>bWalletX</b></span><span class="bwx-go" aria-hidden="true">&rarr;</span></a></aside>
+<div class="wrap">
+  <header class="nav"><a class="brand" href="/" aria-label="bFriendsX home"><img src="/logo.svg" width="28" height="28" alt=""><span>bFriends<span>X</span></span></a><span data-bwx></span></header>
+  <section class="hero">
+    <p class="eyebrow">FLICK ON</p>
+    <h1>Flick your friends on.</h1>
+    <div class="switch" id="sw" role="img" aria-label="A switch flicking on"></div>
+    <p class="lede">You flicked off the old apps. Now switch your people on. One link, posted anywhere: everyone who joins through it turns gold and lands in your friends.</p>
+  </section>
+
+  <section class="panel" id="need">
+    <h2>Connect to get your link</h2>
+    <p class="small">Your link says it's from you, so connect your bWalletX first.</p>
+    <span data-bwx></span>
+  </section>
+
+  <section class="panel hidden" id="mine">
+    <h2>Your FLICK ON link</h2>
+    <div class="field"><input id="from" maxlength="40" placeholder="Your first name (so friends see who it's from)" aria-label="Your first name"><button class="btn btn-gold" id="make" type="button">Make my link</button></div>
+    <div class="hidden" id="out">
+      <div class="linkbox"><code id="url"></code><button class="btn btn-ghost mini" id="copy" type="button">Copy</button><button class="btn btn-ghost mini hidden" id="share" type="button">Share</button></div>
+      <div class="bar" style="margin-top:12px"><a class="btn btn-ghost mini" id="toX" target="_blank" rel="noopener">Post on X</a><a class="btn btn-ghost mini" id="toWa" target="_blank" rel="noopener">WhatsApp</a><a class="btn btn-ghost mini" id="toTg" target="_blank" rel="noopener">Telegram</a></div>
+      <div class="qr" id="qr"></div>
+    </div>
+    <p class="small err" id="err" role="alert"></p>
+    <p class="small" id="onb" style="color:var(--gold)"></p>
+  </section>
+
+  <section class="panel">
+    <h2>Want to pick people one by one?</h2>
+    <p class="small">Drop in your friends list from Facebook, Instagram, LinkedIn, Telegram or X, and send each person their own link.</p>
+    <a class="btn btn-blue" href="/friends">Bring your friends</a>
+  </section>
+</div>
+<script src="https://unpkg.com/@bwalletx/connect@0.5.0/dist/bwalletx-connect.global.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="/bwx.js"></script>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  setTimeout(() => $('sw').classList.add('on'), 400);
+  $('sw').onclick = () => $('sw').classList.toggle('on');
+  let me = null;
+  try { $('from').value = localStorage.getItem('flickon-from') || ''; } catch {}
+  const setMe = (k) => {
+    me = k || null;
+    $('need').classList.toggle('hidden', !!me); $('mine').classList.toggle('hidden', !me);
+    if (me) fetch('/api/claims', { credentials: 'same-origin' }).then((r) => r.ok ? r.json() : { claims: [] }).then((j) => {
+      const n = j.claims.length; $('onb').textContent = n ? n.toLocaleString() + (n === 1 ? ' friend has' : ' friends have') + ' flicked on through you.' : '';
+    }).catch(() => {});
+  };
+  document.addEventListener('bfriendsx-wallet', (e) => setMe(e.detail.identityKey));
+  fetch('/api/bwalletx/session', { credentials: 'same-origin' }).then((r) => r.json()).then((j) => setMe(j.identityKey)).catch(() => {});
+  $('make').onclick = async () => {
+    $('err').textContent = '';
+    const from = $('from').value.trim();
+    try { localStorage.setItem('flickon-from', from); } catch {}
+    const r = await fetch('/api/invite', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ general: true, from }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) { $('err').textContent = j.error || 'That didn’t work. Try again.'; return; }
+    const url = j.url, text = 'I’ve flicked off the old apps. Come and flick on with me:';
+    $('url').textContent = url; $('out').classList.remove('hidden');
+    $('toX').href = 'https://x.com/intent/post?text=' + encodeURIComponent(text + ' ' + url);
+    $('toWa').href = 'https://wa.me/?text=' + encodeURIComponent(text + ' ' + url);
+    $('toTg').href = 'https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(text);
+    if (navigator.share) { $('share').classList.remove('hidden'); $('share').onclick = () => navigator.share({ title: 'FLICK ON', text, url }).catch(() => {}); }
+    $('copy').onclick = async () => { await navigator.clipboard?.writeText(url); $('copy').textContent = 'Copied'; };
+    if (window.qrcode) { const q = qrcode(0, 'M'); q.addData(url); q.make(); $('qr').innerHTML = q.createSvgTag({ cellSize: 3, margin: 0 }); }
+  };
+})();
+</script>
+</body>
+</html>
