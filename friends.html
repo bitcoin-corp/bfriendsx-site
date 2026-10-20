@@ -22,12 +22,13 @@
 
   <section class="panel" id="step1">
     <h2>1. Open your exports</h2>
-    <label class="drop" id="drop"><input type="file" id="files" multiple accept=".zip,.csv,.json,application/zip,text/csv,application/json"><b>Choose or drop your export files</b><br><span class="small">.zip files as the networks send them (LinkedIn's Connections.csv and Telegram's result.json work too). Read on this device. Nothing is uploaded.</span></label>
+    <label class="drop" id="drop"><input type="file" id="files" multiple accept=".zip,.csv,.json,.html,application/zip,text/csv,application/json,text/html"><b>Drop your export here</b>: the .zip, or the whole folder<br><span class="small">Zip or unzipped, HTML or JSON. Read on this device. Nothing is uploaded.</span></label>
+    <p class="small" style="margin:10px 0 0;text-align:center"><button class="btn btn-ghost mini" type="button" id="pickDir">Choose a folder instead</button><input type="file" id="dir" webkitdirectory multiple hidden></p>
     <ul class="how">
       <li><span class="badge facebook">f</span> <b>Facebook</b><br><span class="small">Settings → Download your information → Connections → Friends, format JSON.</span></li>
-      <li><span class="badge instagram">ig</span> <b>Instagram</b><br><span class="small">Accounts Centre → Download your information → Followers and following, format JSON.</span></li>
+      <li><span class="badge instagram">ig</span> <b>Instagram</b><br><span class="small">Accounts Centre → Download your information → Followers and following. HTML or JSON.</span></li>
       <li><span class="badge linkedin">in</span> <b>LinkedIn</b><br><span class="small">Settings → Data privacy → Get a copy of your data → Connections.</span></li>
-      <li><span class="badge telegram">tg</span> <b>Telegram</b><br><span class="small">Telegram Desktop → Settings → Advanced → Export Telegram data. Tick contacts and chats, format JSON.</span></li>
+      <li><span class="badge telegram">tg</span> <b>Telegram</b><br><span class="small">Telegram Desktop → Settings → Advanced → Export Telegram data. Tick contacts and chats. HTML or JSON both work: drop the DataExport folder.</span></li>
       <li><span class="badge x">X</span> <b>X</b><br><span class="small">Settings → Your account → Download an archive. X gives account numbers only, so names show later.</span></li>
     </ul>
     <p class="small err" id="readErr" role="alert"></p>

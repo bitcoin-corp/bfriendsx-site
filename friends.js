@@ -17,17 +17,24 @@ let claimed = new Set(); // network + '\n' + name of friends who accepted your i
 
 // ── reading exports ──
 const asFiles = async (file) => {
-  if (/\.(csv|json)$/i.test(file.name)) return [{ path: file.name, size: file.size, text: () => file.text() }];
+  const path = file.relPath || file.webkitRelativePath || file.name;
+  if (!/\.zip$/i.test(file.name)) return [{ path, size: file.size, text: () => file.text() }];
   const zip = await JSZip.loadAsync(file);
   return Object.values(zip.files).filter((e) => !e.dir).map((e) => ({ path: e.name, size: e._data?.uncompressedSize ?? 0, text: () => e.async('string') }));
 };
+// A folder (picked or dropped) arrives as many loose files: read them together as one export.
 async function open(list) {
   $('readErr').textContent = '';
+  const loose = list.filter((f) => !/\.zip$/i.test(f.name));
+  if (loose.length > 1) {
+    const fl = loose.map((f) => ({ path: f.relPath || f.webkitRelativePath || f.name, size: f.size, text: () => f.text() }));
+    list = [...list.filter((f) => /\.zip$/i.test(f.name)), { name: 'that folder', files: fl }];
+  }
   const seen = new Set(all.map((f) => f.network + '\n' + f.key));
   let added = 0;
   for (const file of list) {
     try {
-      const fl = await asFiles(file);
+      const fl = file.files ?? await asFiles(file);
       const got = await friends(fl);
       groups.push(...await telegramGroups(fl));
       if (!got.length) { $('readErr').textContent = `No friends list found in ${file.name}. Check it's the export with your friends or followers in it.`; continue; }
@@ -54,10 +61,27 @@ async function lookup() {
   render();
 }
 $('files').onchange = (e) => open([...e.target.files]);
+$('dir').onchange = (e) => open([...e.target.files]);
+$('pickDir').onclick = () => $('dir').click();
+// dropped folders: walk them (webkitGetAsEntry), keeping each file's path inside the folder
+const walk = (entry, base = '') => new Promise((done) => {
+  if (entry.isFile) return entry.file((f) => { f.relPath = base + f.name; done([f]); }, () => done([]));
+  const r = entry.createReader(), out = [];
+  const next = () => r.readEntries(async (es) => {
+    if (!es.length) return done((await Promise.all(out)).flat());
+    for (const e of es) out.push(walk(e, base + entry.name + '/'));
+    next();
+  }, () => done([]));
+  next();
+});
 const drop = $('drop');
 drop.ondragover = (e) => { e.preventDefault(); drop.classList.add('over'); };
 drop.ondragleave = () => drop.classList.remove('over');
-drop.ondrop = (e) => { e.preventDefault(); drop.classList.remove('over'); open([...e.dataTransfer.files]); };
+drop.ondrop = async (e) => {
+  e.preventDefault(); drop.classList.remove('over');
+  const entries = [...e.dataTransfer.items].map((i) => i.webkitGetAsEntry?.()).filter(Boolean);
+  open(entries.length ? (await Promise.all(entries.map((en) => walk(en)))).flat() : [...e.dataTransfer.files]);
+};
 
 // ── the list ──
 const visible = () => {
@@ -80,7 +104,9 @@ function render() {
 }
 function showGroups() {
   $('groupsPanel').classList.toggle('hidden', !groups.length);
-  $('groups').innerHTML = groups.map((g, gi) => `<li><span class="badge telegram">tg</span><span class="nm">${esc(g.name)}</span><span class="meta">${g.members.length} ${g.members.length === 1 ? 'person' : 'people'}</span><button class="btn btn-ghost mini" type="button" data-g="${gi}">Pick members</button></li>`).join('');
+  const shownG = groups.filter((g) => g.members.length);
+  $('groups').innerHTML = shownG.map((g) => `<li><span class="badge telegram">tg</span><span class="nm">${esc(g.name)}</span><span class="meta">${g.members.length} ${g.members.length === 1 ? 'person' : 'people'}</span><button class="btn btn-ghost mini" type="button" data-g="${groups.indexOf(g)}">Pick members</button></li>`).join('')
+    + (groups.length > shownG.length ? `<li class="small">${(groups.length - shownG.length).toLocaleString()} group${groups.length - shownG.length === 1 ? '' : 's'} came with only your own messages, so we can't see who's in ${groups.length - shownG.length === 1 ? 'it' : 'them'}. Telegram does that by default: export again with <b>Only my messages</b> unticked under Private groups to bring them.</li>` : '');
 }
 $('groups').onclick = (e) => {
   const b = e.target.closest('[data-g]'); if (!b) return;
