@@ -2,6 +2,17 @@
   "cleanUrls": true,
   "redirects": [
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.bfriendsx.com"
+        }
+      ],
+      "destination": "https://bfriendsx.com/",
+      "permanent": true
+    },
+    {
       "source": "/link/x",
       "destination": "https://bmintx.com/link/x?return=bfriendsx",
       "permanent": false
@@ -32,6 +43,25 @@
     {
       "source": "/i/:t",
       "destination": "/invite"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/.well-known/bwalletx-theme.json",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Content-Type",
+          "value": "application/json; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=300"
+        }
+      ]
     }
   ]
 }
