@@ -19,12 +19,22 @@
   document.head.appendChild(css);
 
   let key = null;
+  let handle = null;
+  // Public, CORS-open lookup: the $handle (bWalletX paymail) for this identity key, if it has one.
+  const lookup = async (k) => {
+    handle = null;
+    try {
+      const r = await fetch(`https://pay.bwallet.space/api/paymail/lookup?key=${encodeURIComponent(k)}`);
+      const j = r.ok ? await r.json() : null;
+      if (j && typeof j.paymail === 'string' && key === k) { handle = '$' + j.paymail.split('@')[0]; draw(); }
+    } catch {}
+  };
   const draw = () => slots.forEach((s) => {
     s.innerHTML = '';
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'bwx-btn' + (key ? ' on' : '');
-    b.innerHTML = key ? `<span class="bwx-dot"></span>bWalletX ${short(key)}` : 'Connect bWalletX';
+    b.innerHTML = key ? `<span class="bwx-dot"></span>${esc(handle || 'bWalletX ' + short(key))}` : 'Connect bWalletX';
     b.title = key ? 'Connected. Click to disconnect.' : 'Connect your bWalletX';
     b.onclick = key ? disconnect : connect;
     s.appendChild(b);
@@ -63,7 +73,7 @@
         },
       });
       const v = await post('/api/bwalletx/verify', { identityKey: r.identityKey, nonce: r.nonce, signature: r.signature, ticket });
-      key = v.identityKey; window.bfxWallet = r.wallet || null; close(); draw();   // keep the wallet for gift pots (gift.js)
+      key = v.identityKey; window.bfxWallet = r.wallet || null; close(); draw(); lookup(key);   // keep the wallet for gift pots (gift.js)
       document.dispatchEvent(new CustomEvent('bfriendsx-wallet', { detail: { identityKey: key } }));
     } catch (e) {
       if (e && e.code === 'NOT_FOUND') {
@@ -78,8 +88,13 @@
   async function disconnect() {
     await post('/api/bwalletx/session', {}).catch(() => {});
     try { C.clearPairing?.(); } catch {}
-    key = null; draw();
+    // Tell the bWalletX extension this site disconnected, so it stops wearing the site's theme.
+    try { window.postMessage({ type: 'bwallet:disconnect' }, location.origin); } catch {}
+    key = null; handle = null; draw();
   }
-  fetch('/api/bwalletx/session', { credentials: 'same-origin' }).then((r) => r.json()).then((j) => { key = j.identityKey || null; draw(); }).catch(draw);
+  // After a reload the session cookie says who you are, but bWalletX only wears this site's theme once the page has
+  // talked to it. With an extension or in-app wallet, quietly ask for the identity key again (never pairs).
+  const touch = async () => { try { const f = await C.discoverBwalletX?.(800); if (f && f.wallet) await f.wallet.getPublicKey({ identityKey: true }); } catch {} };
+  fetch('/api/bwalletx/session', { credentials: 'same-origin' }).then((r) => r.json()).then((j) => { key = j.identityKey || null; draw(); if (key) { lookup(key); touch(); } }).catch(draw);
   draw();
 })();
