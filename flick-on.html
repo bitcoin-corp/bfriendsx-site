@@ -30,6 +30,14 @@
 .qr{background:#fff;border-radius:12px;padding:10px;width:max-content;margin:14px auto 0}
 .field{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 14px}
 .field input{flex:1 1 200px;background:#000;border:1px solid var(--line);border-radius:999px;color:var(--ink);padding:10px 16px;font:inherit}
+.field select{background:#000;border:1px solid var(--line);border-radius:999px;color:var(--ink);padding:9px 14px;font:inherit;max-width:100%}
+.warn{border:1px solid rgba(255,210,77,.45);background:rgba(255,210,77,.07);border-radius:12px;padding:10px 12px;margin:0 0 14px;font-size:14px;color:#efe7cf}
+.warn b{color:var(--gold)}
+.pots{list-style:none;margin:0 0 12px;padding:0;border-top:1px solid var(--line)}
+.pots li{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 2px;border-bottom:1px solid var(--line);font-size:14px}
+.pots .amt{font:600 15px 'Space Grotesk';min-width:110px}.pots .when{flex:1 1 180px;color:var(--mute);font-size:13px}
+.pots .st{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:2px 8px;color:var(--mute)}.pots .st.expired{color:var(--gold);border-color:rgba(255,210,77,.45)}
+.filebtn{position:relative;overflow:hidden}.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
 </style>
 </head>
 <body>
@@ -53,17 +61,29 @@
     <h2>Your FLICK ON link</h2>
     <div class="field"><input id="from" maxlength="40" placeholder="Your first name (so friends see who it's from)" aria-label="Your first name"><button class="btn btn-gold" id="make" type="button">Make my link</button></div>
     <div class="field"><label class="small" for="gift" style="margin-right:6px">Leave a gift in it</label>
-      <select id="gift" style="background:#000;border:1px solid var(--line);border-radius:999px;color:var(--ink);padding:9px 14px;font:inherit">
+      <select id="gift">
         <option value="0">No gift</option><option value="1000">1,000 sats (test)</option><option value="10000">10,000 sats</option><option value="100000">0.001 BSV</option><option value="1000000">0.01 BSV</option>
-      </select></div>
-    <p class="small" id="giftNote" hidden style="color:var(--gold)">A gift link is like cash: whoever opens it first can claim it. Send it to one person, privately, never in a public post. Your wallet pays the gift when you make the link. Open the link yourself to take it back if it isn't claimed.</p>
+      </select>
+      <label class="small hidden" for="days" id="daysLabel" style="margin:0 6px 0 4px">Expires after</label>
+      <select id="days" class="hidden"><option value="1">1 day</option><option value="7" selected>7 days</option><option value="30">30 days</option></select></div>
+    <div class="warn" id="giftNote" hidden><b>Anyone with this link can claim it.</b> A gift link is like cash: whoever opens it first gets it. Send it to one person, privately, never in a public post. A gift holds at most <span id="capTxt">$20</span>. Your wallet pays the gift when you make the link.<br><span id="expTxt"></span></div>
     <div class="hidden" id="out">
+      <div class="warn hidden" id="giftOut"><b>Anyone with this link can claim it.</b> <span id="giftOutTxt"></span>
+        <div class="bar" style="margin:10px 0 0"><button class="btn btn-ghost mini" id="saveRefund" type="button">Save refund file</button></div></div>
       <div class="linkbox"><code id="url"></code><button class="btn btn-ghost mini" id="copy" type="button">Copy</button><button class="btn btn-ghost mini hidden" id="share" type="button">Share</button></div>
       <div class="bar" style="margin-top:12px"><a class="btn btn-ghost mini" id="toX" target="_blank" rel="noopener">Post on X</a><a class="btn btn-ghost mini" id="toWa" target="_blank" rel="noopener">WhatsApp</a><a class="btn btn-ghost mini" id="toTg" target="_blank" rel="noopener">Telegram</a></div>
       <div class="qr" id="qr"></div>
     </div>
     <p class="small err" id="err" role="alert"></p>
     <p class="small" id="onb" style="color:var(--gold)"></p>
+  </section>
+
+  <section class="panel hidden" id="potsPanel">
+    <h2>Your gift pots</h2>
+    <p class="small">Each gift comes with a refund your wallet signed when you made it. If nobody claims the gift before it expires, reclaim it here into the same bWalletX. It works without bFriendsX's servers: the refund is kept in this browser and in the refund file you saved.</p>
+    <ul class="pots" id="pots"></ul>
+    <span class="btn btn-ghost mini filebtn">Load a refund file<input type="file" id="loadRefund" accept="application/json,.json" aria-label="Load a refund file"></span>
+    <p class="small err" id="potErr" role="alert"></p>
   </section>
 
   <section class="panel">
@@ -85,13 +105,72 @@
   const setMe = (k) => {
     me = k || null;
     $('need').classList.toggle('hidden', !!me); $('mine').classList.toggle('hidden', !me);
+    if (me) { priceOptions().catch(() => {}); drawPots().catch(() => {}); }
     if (me) fetch('/api/claims', { credentials: 'same-origin' }).then((r) => r.ok ? r.json() : { claims: [] }).then((j) => {
       const n = j.claims.length; $('onb').textContent = n ? n.toLocaleString() + (n === 1 ? ' friend has' : ' friends have') + ' flicked on through you.' : '';
     }).catch(() => {});
   };
   document.addEventListener('bfriendsx-wallet', (e) => setMe(e.detail.identityKey));
   fetch('/api/bwalletx/session', { credentials: 'same-origin' }).then((r) => r.json()).then((j) => setMe(j.identityKey)).catch(() => {});
-  $('gift').onchange = () => { $('giftNote').hidden = !+$('gift').value; };
+  // gift pots: the $20 cap, the expiry and the sender's own refunds all live in gift.js
+  let G = null, rate = 0;
+  const gift = () => (G ? Promise.resolve(G) : import('/gift.js').then((m) => (G = m)));
+  const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  async function priceOptions() {
+    const g = await gift();
+    $('capTxt').textContent = g.fmtUsd(g.CAP_USD);
+    try { rate = await g.bsvUsd(); } catch { rate = 0; }
+    for (const o of $('gift').options) {
+      const s = +o.value; if (!s) continue;
+      o.dataset.l = o.dataset.l || o.textContent;
+      o.textContent = o.dataset.l + (rate ? ' (' + g.fmtUsd(g.usdOf(s, rate)) + ')' : '');
+      o.disabled = !!rate && s > g.capSats(rate);   // never offer more than the cap
+      if (o.disabled) o.textContent += ' — over the ' + g.fmtUsd(g.CAP_USD) + ' cap';
+    }
+    if ($('gift').selectedOptions[0]?.disabled) $('gift').value = '0';
+  }
+  async function expiryNote() {
+    const g = await gift(), s = +$('gift').value;
+    const exp = Math.floor(Date.now() / 1000) + +$('days').value * 86400;
+    $('expTxt').textContent = s ? 'If nobody claims it by ' + g.fmtDate(exp) + ', you can reclaim it from this page.' + (rate ? ' This gift is about ' + g.fmtUsd(g.usdOf(s, rate)) + '.' : '') : '';
+  }
+  const giftUi = () => { const on = !!+$('gift').value; $('giftNote').hidden = !on; $('days').classList.toggle('hidden', !on); $('daysLabel').classList.toggle('hidden', !on); if (on) expiryNote(); };
+  $('gift').onchange = giftUi; $('days').onchange = giftUi;
+  const STATUS = { waiting: 'Waiting', expired: 'Expired: reclaim it', claimed: 'Claimed', refunded: 'Back in your wallet' };
+  async function drawPots() {
+    const g = await gift(), list = g.refunds();
+    $('potsPanel').classList.toggle('hidden', !list.length && !me);
+    $('pots').innerHTML = list.length ? '' : '<li class="small">No gift pots made in this browser. Load a refund file to reclaim one made elsewhere.</li>';
+    for (const r of list) {
+      const li = document.createElement('li');
+      li.innerHTML = '<span class="amt">' + esc(g.fmtSats(r.sats)) + '</span><span class="when">' + (g.expired(r.expiry) ? 'Expired ' : 'Expires ') + esc(g.fmtDate(r.expiry)) + '</span><span class="st">Checking…</span>';
+      $('pots').appendChild(li);
+      g.refundStatus(r).then((st) => {
+        const tag = li.querySelector('.st'); tag.textContent = STATUS[st]; tag.className = 'st ' + st;
+        if (st === 'claimed' || st === 'refunded') {
+          const b = document.createElement('button'); b.className = 'btn btn-ghost mini'; b.type = 'button'; b.textContent = 'Forget';
+          b.onclick = () => { g.forgetRefund(r.txid); drawPots(); }; li.appendChild(b);
+        } else {
+          const b = document.createElement('button'); b.className = 'btn ' + (st === 'expired' ? 'btn-gold' : 'btn-ghost') + ' mini'; b.type = 'button'; b.textContent = 'Reclaim';
+          b.disabled = st !== 'expired'; if (b.disabled) b.title = 'You can reclaim it after ' + g.fmtDate(r.expiry);
+          b.onclick = async () => {
+            $('potErr').textContent = ''; b.disabled = true; b.textContent = 'Approve it in bWalletX…';
+            try { const x = await g.reclaim(r, me); tag.textContent = 'Back in your wallet: ' + g.fmtSats(x.sats); tag.className = 'st refunded'; b.remove(); }
+            catch (e) { $('potErr').textContent = (e && e.message) || 'Could not reclaim it. Try again.'; b.disabled = false; b.textContent = 'Reclaim'; }
+          };
+          li.appendChild(b);
+        }
+      }).catch(() => { li.querySelector('.st').textContent = 'Couldn’t check'; });
+    }
+  }
+  $('loadRefund').onchange = async (e) => {
+    $('potErr').textContent = '';
+    const f = e.target.files && e.target.files[0]; e.target.value = '';
+    if (!f) return;
+    try { const g = await gift(), r = await g.readRefundFile(f); if (!g.saveRefund(r)) throw new Error('This browser won’t keep it. Allow site storage and try again.'); drawPots(); }
+    catch (err) { $('potErr').textContent = (err && err.message) || 'Could not read that file.'; }
+  };
+  const download = (blob, name) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); };
   $('make').onclick = async () => {
     $('err').textContent = '';
     const from = $('from').value.trim();
@@ -100,14 +179,26 @@
     const j = await r.json().catch(() => ({}));
     if (!r.ok) { $('err').textContent = j.error || 'That didn’t work. Try again.'; return; }
     let url = j.url, text = 'I’ve flicked off the old apps. Come and flick on with me:';
-    const gift = +$('gift').value;
-    if (gift) {
+    const sats = +$('gift').value;
+    $('giftOut').classList.add('hidden');
+    if (sats) {
       $('make').disabled = true; $('make').textContent = 'Approve the gift in bWalletX…';
-      try { const g = await import('/gift.js'); url += '#' + await g.makeGift(gift); text = 'I’ve flicked off the old apps, and left you a gift. Come and flick on:'; }
+      let made;
+      try { const g = await gift(); made = await g.makeGift(sats, { senderKey: me, days: +$('days').value }); }
       catch (e) { $('err').textContent = 'No gift was made: ' + ((e && e.message) || 'the wallet said no.'); $('make').disabled = false; $('make').textContent = 'Make my link'; return; }
+      url += '#' + made.fragment;
+      text = 'I’ve flicked off the old apps, and left you a gift. Come and flick on (claim it by ' + G.fmtDate(made.expiry) + '). ' + G.WARNING + ' Please don’t forward it:';
+      const kept = made.refund && G.saveRefund(made.refund);
+      $('giftOutTxt').textContent = 'Send it to one person, privately. It expires ' + G.fmtDate(made.expiry) + '. '
+        + (made.refund ? 'If nobody claims it by then, reclaim it below. ' + (kept ? 'The refund is kept in this browser; save the file too, in case this browser forgets it.' : 'This browser won’t keep the refund, so save the file now.')
+          : 'We couldn’t sign a refund for this one, so keep this link: opening it yourself takes the gift back.');
+      $('saveRefund').classList.toggle('hidden', !made.refund);
+      $('saveRefund').onclick = () => download(G.refundFile(made.refund), 'bfriendsx-gift-refund-' + made.refund.txid.slice(0, 8) + '.json');
+      $('giftOut').classList.remove('hidden');
+      drawPots().catch(() => {});
       $('make').disabled = false; $('make').textContent = 'Make another link';
     }
-    $('toX').classList.toggle('hidden', !!gift);   // a gift link must never go in a public post
+    $('toX').classList.toggle('hidden', !!sats);   // a gift link must never go in a public post
     $('url').textContent = url; $('out').classList.remove('hidden');
     $('toX').href = 'https://x.com/intent/post?text=' + encodeURIComponent(text + ' ' + url);
     $('toWa').href = 'https://wa.me/?text=' + encodeURIComponent(text + ' ' + url);

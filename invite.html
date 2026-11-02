@@ -29,7 +29,8 @@
     <h1 id="title">You’ve been flicked on.</h1>
     <p class="lede" id="lede">Checking your invite…</p>
     <div class="ctas" id="ctas"><span data-bwx></span><a class="btn btn-ghost" href="https://bwalletx.com/get">Get bWalletX</a></div>
-    <p id="giftLine" style="color:var(--gold);font:600 18px 'Space Grotesk';margin:0 0 14px" hidden></p>
+    <p id="giftLine" style="color:var(--gold);font:600 18px 'Space Grotesk';margin:0 0 6px" hidden></p>
+    <p class="small" id="giftMeta" style="margin:0 0 14px;color:#d8d3c5" hidden></p>
     <p class="small" id="from"></p>
   </main>
 </div>
@@ -53,19 +54,24 @@
     if (!gift) return;
     const pot = await m.potOf(gift).catch(() => null);
     giftSats = pot ? pot.sats : 0;
-    const line = $('giftLine'); line.hidden = false;
-    line.textContent = giftSats ? '…and left you ' + m.fmtSats(giftSats) + '. Connect bWalletX to claim it.' : 'The gift in this link has already been claimed.';
+    const line = $('giftLine'), meta = $('giftMeta'); line.hidden = false;
+    const late = m.expired(gift.expiry);
+    line.textContent = !giftSats ? 'The gift in this link has already been claimed.'
+      : late ? 'The gift in this link expired on ' + m.fmtDate(gift.expiry) + ', so it goes back to the sender.'
+      : '…and left you ' + m.fmtSats(giftSats) + '. Connect bWalletX to claim it' + (gift.expiry ? ' by ' + m.fmtDate(gift.expiry) : '') + '.';
+    if (giftSats) { meta.hidden = false; meta.textContent = m.WARNING + ' Please don’t forward it.' + (gift.expiry && !late ? ' Unclaimed gifts go back to the sender on ' + m.fmtDate(gift.expiry) + '.' : ''); }
   }).catch(() => {}) : Promise.resolve();
   async function claim(key, takingBack) {
     await giftReady;
     if (!giftMod || !gift || !giftSats) return;
+    if (!takingBack && giftMod.expired(gift.expiry)) return;   // expired: it's the sender's to reclaim now
     const line = $('giftLine');
     line.textContent = takingBack ? 'Taking your gift back… approve it in bWalletX.' : 'Claiming your gift… approve it in bWalletX.';
     try {
       const r = await giftMod.claimGift(gift, key);
       line.textContent = (takingBack ? 'Back in your wallet: ' : 'In your bWalletX now: ') + giftMod.fmtSats(r.sats) + '.';
       history.replaceState(null, '', location.pathname);   // drop the secret from the address bar
-      giftSats = 0;
+      giftSats = 0; $('giftMeta').hidden = true;
     } catch (e) { line.textContent = (e && e.message) || 'Could not claim the gift. Try again.'; }
   }
   const gold = (key) => {
