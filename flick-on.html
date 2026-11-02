@@ -66,7 +66,7 @@
       </select>
       <label class="small hidden" for="days" id="daysLabel" style="margin:0 6px 0 4px">Expires after</label>
       <select id="days" class="hidden"><option value="1">1 day</option><option value="7" selected>7 days</option><option value="30">30 days</option></select></div>
-    <div class="warn" id="giftNote" hidden><b id="warnGeneric">Anyone with the link can claim it before it expires. Unclaimed after that? You can take it back.</b> A gift link is like cash: whoever opens it first gets it. Send it to one person, privately, never in a public post. A gift holds at most <span id="capTxt">$20</span>. Your wallet pays the gift when you make the link.<br><span id="expTxt"></span></div>
+    <div class="warn" id="giftNote" hidden><b id="warnGeneric">Anyone with the link can claim it. After it expires, you can take it back, but only if nobody has claimed it first.</b> A gift link is like cash: whoever opens it first gets it. Send it to one person, privately, never in a public post. A gift holds at most <span id="capTxt">$20</span>. Your wallet pays the gift when you make the link.<br><span id="expTxt"></span></div>
     <div class="hidden" id="out">
       <div class="warn hidden" id="giftOut"><b id="warnUntil"></b> <span id="giftOutTxt"></span>
         <div class="bar" style="margin:10px 0 0"><button class="btn btn-ghost mini" id="saveRefund" type="button">Save refund file</button></div></div>
@@ -92,8 +92,8 @@
     <a class="btn btn-blue" href="/friends">Bring your friends</a>
   </section>
 </div>
-<script src="https://unpkg.com/@bwalletx/connect@0.5.0/dist/bwalletx-connect.global.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://unpkg.com/@bwalletx/connect@0.5.0/dist/bwalletx-connect.global.js" integrity="sha384-1XiN/accJppMI7qXUHzNrUAdUWIotONkjNy7rZBrwcvPxDCFk1yC83JY2c4LZ8gg" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" integrity="sha384-mZT2gIty7ZDdOGkxfP6joZcYdMW1Jvj9dRlfpTmaJAKKXTqzygtB22k7FLe+KZC1" crossorigin="anonymous"></script>
 <script src="/bwx.js"></script>
 <script>
 (() => {
@@ -188,23 +188,27 @@
       try { const g = await gift(); made = await g.makeGift(sats, { senderKey: me, days: +$('days').value }); }
       catch (e) { $('err').textContent = 'No gift was made: ' + ((e && e.message) || 'the wallet said no.'); $('make').disabled = false; $('make').textContent = 'Make my link'; return; }
       url += '#' + made.fragment;
-      text = 'I’ve flicked off the old apps, and left you a gift. Come and flick on. ' + G.warningForFriend(made.expiry) + ' Please don’t forward it:';
-      $('warnUntil').textContent = G.warningUntil(made.expiry);
+      text = 'I’ve flicked off the old apps, and left you a gift. Come and flick on. ' + (made.expiry ? G.warningForFriend(made.expiry) : G.WARNING_LEGACY) + ' Please don’t forward it:';
+      $('warnUntil').textContent = made.expiry ? G.warningUntil(made.expiry) : G.WARNING_LEGACY;
       const kept = made.refund && G.saveRefund(made.refund);
       $('giftOutTxt').textContent = 'Send it to one person, privately. '
         + (made.refund ? 'Once it expires, take it back with Reclaim below. ' + (kept ? 'The refund is kept in this browser; save the file too, in case this browser forgets it.' : 'This browser won’t keep the refund, so save the file now.')
-          : 'We couldn’t sign a refund for this one, so keep this link: opening it yourself takes the gift back.');
+          : G.NO_EXPIRY);
       $('saveRefund').classList.toggle('hidden', !made.refund);
       $('saveRefund').onclick = () => download(G.refundFile(made.refund), 'bfriendsx-gift-refund-' + made.refund.txid.slice(0, 8) + '.json');
       $('giftOut').classList.remove('hidden');
       drawPots().catch(() => {});
       $('make').disabled = false; $('make').textContent = 'Make another link';
     }
-    $('toX').classList.toggle('hidden', !!sats);   // a gift link must never go in a public post
+    // A gift link carries the pot key. Never hand it to X, WhatsApp or Telegram share URLs (their servers would see the
+    // key): with a gift, only Copy, the device's own Share sheet and the QR code are offered.
+    for (const id of ['toX', 'toWa', 'toTg']) { $(id).classList.toggle('hidden', !!sats); $(id).removeAttribute('href'); }
     $('url').textContent = url; $('out').classList.remove('hidden');
-    $('toX').href = 'https://x.com/intent/post?text=' + encodeURIComponent(text + ' ' + url);
-    $('toWa').href = 'https://wa.me/?text=' + encodeURIComponent(text + ' ' + url);
-    $('toTg').href = 'https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(text);
+    if (!sats) {
+      $('toX').href = 'https://x.com/intent/post?text=' + encodeURIComponent(text + ' ' + url);
+      $('toWa').href = 'https://wa.me/?text=' + encodeURIComponent(text + ' ' + url);
+      $('toTg').href = 'https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(text);
+    }
     if (navigator.share) { $('share').classList.remove('hidden'); $('share').onclick = () => navigator.share({ title: 'FLICK ON', text, url }).catch(() => {}); }
     $('copy').onclick = async () => { await navigator.clipboard?.writeText(url); $('copy').textContent = 'Copied'; };
     if (window.qrcode) { const q = qrcode(0, 'M'); q.addData(url); q.make(); $('qr').innerHTML = q.createSvgTag({ cellSize: 3, margin: 0 }); }

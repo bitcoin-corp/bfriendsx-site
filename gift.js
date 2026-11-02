@@ -13,21 +13,24 @@
 //    only pay the sender. It is kept in the sender's browser and as a file they can save; after expiry the sender
 //    broadcasts it from any browser with reclaim(). Our server never sees the pot key, the refund or the money.
 //  - Never log the pot key. Nothing here writes to the console.
-import { PrivateKey, PublicKey, P2PKH, Transaction, SatoshisPerKilobyte, Random, Utils } from 'https://cdn.jsdelivr.net/npm/@bsv/sdk@2.8.10/+esm';
+//  - The SDK is self-hosted (pinned, from npm), never a CDN: a tampered SDK would see every open pot's key.
+//    To update it, see scripts/vendor-bsv-sdk.sh.
+import { PrivateKey, PublicKey, P2PKH, Transaction, SatoshisPerKilobyte, Random, Utils } from '/vendor/bsv-sdk-2.8.10.min.js';
 
 const WOC = 'https://api.whatsonchain.com/v1/bsv/main';
 const BRC29 = '3241645161d8';
 const FEE = 100;                       // sat/kB, the house rate (same as claims)
 export const CAP_USD = 20;             // the most any one pot may hold
 export const EXPIRY_DAYS = [1, 7, 30]; // offered on /flick-on
-// The warning wherever a pot link is made, shared or opened. It says plainly that the refund only works if nobody
-// has claimed the pot first. Use warningUntil(expiry) once the pot's real expiry is known.
-export const WARNING = 'Anyone with the link can claim it before it expires. Unclaimed after that? You can take it back.';
-export const warningUntil = (expiry) => `Anyone with the link can claim it until ${fmtDate(expiry)}. Unclaimed by then? You can take it back.`;
+// The warning wherever a pot link is made, shared or opened. It says plainly that the take-back only works if nobody
+// has claimed the pot first. WARNING before a pot (and its expiry) exists; warningUntil(expiry) to the sender after.
+export const WARNING = 'Anyone with the link can claim it. After it expires, you can take it back, but only if nobody has claimed it first.';
+export const warningUntil = (expiry) => `Anyone with the link can claim it. After ${fmtDate(expiry)}, you can take it back, but only if nobody has claimed it first.`;
 // The same, for the FRIEND reading it (share text, claim view): the sender takes it back, not them.
-export const warningForFriend = (expiry) => `Anyone with the link can claim it until ${fmtDate(expiry)}. Unclaimed by then? It goes back to the sender.`;
-/** Links made before expiries existed have no expiry and no refund: only the link itself can take them back. */
+export const warningForFriend = (expiry) => `Anyone with the link can claim it. After ${fmtDate(expiry)}, it goes back to the sender, but only if nobody has claimed it first.`;
+/** Pots with no expiry (made before expiries existed, or whose take-back couldn't be signed): no refund to promise. */
 export const WARNING_LEGACY = 'Anyone with the link can claim it.';
+export const NO_EXPIRY = 'This gift has no expiry: we couldn’t prepare your take-back.';
 
 /** The connected BRC-100 wallet: kept by bwx.js at sign-in, else reconnect (extension or stored pairing). */
 export async function wallet() {
@@ -113,15 +116,18 @@ export async function makeGift(sats, { senderKey, days = 7 } = {}) {
     options: { randomizeOutputs: false },
   });
   if (!r?.txid) throw new Error('Your wallet did not make the payment.');
-  const fragment = `g=${key.toWif()}.${r.txid}.${expiry}`;
-
+  // The wallet has paid, so the pot exists either way. Sign the take-back (one retry); if that still fails, the link
+  // carries NO expiry, so nobody is told the gift will go back to the sender.
   let refund = null;
-  try {
-    const vout = await potVout(r, lockHex);
-    const s = await signRefund(key, r.txid, vout, sats, lockingScript, senderKey, expiry);
-    refund = { v: 1, kind: 'bfriendsx-gift-refund', txid: r.txid, vout, sats, expiry, to: senderKey, pot: key.toPublicKey().toString(), made: Math.floor(Date.now() / 1000), ...s };
-  } catch {}
-  return { fragment, expiry, refund };
+  for (let t = 0; t < 2 && !refund; t++) {
+    try {
+      const vout = await potVout(r, lockHex);
+      const s = await signRefund(key, r.txid, vout, sats, lockingScript, senderKey, expiry);
+      refund = { v: 1, kind: 'bfriendsx-gift-refund', txid: r.txid, vout, sats, expiry, to: senderKey, pot: key.toPublicKey().toString(), made: Math.floor(Date.now() / 1000), ...s };
+    } catch { if (t === 0) await new Promise((res) => setTimeout(res, 1500)); }
+  }
+  const fragment = `g=${key.toWif()}.${r.txid}` + (refund ? `.${expiry}` : '');
+  return { fragment, expiry: refund ? expiry : null, refund };
 }
 
 /** Read "#g=<wif>.<txid>[.<expiry>]" from a fragment. Links made before expiries have no expiry. */
