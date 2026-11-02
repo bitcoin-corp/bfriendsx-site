@@ -59,7 +59,7 @@
     line.textContent = !giftSats ? 'The gift in this link has already been claimed.'
       : late ? 'The gift in this link expired on ' + m.fmtDate(gift.expiry) + ', so it goes back to the sender.'
       : '…and left you ' + m.fmtSats(giftSats) + '. Connect bWalletX to claim it' + (gift.expiry ? ' by ' + m.fmtDate(gift.expiry) : '') + '.';
-    if (giftSats) { meta.hidden = false; meta.textContent = (late ? '' : (gift.expiry ? m.warningUntil(gift.expiry) : m.WARNING_LEGACY) + ' ') + 'Please don’t forward it.'; }
+    if (giftSats) { meta.hidden = false; meta.textContent = (late ? '' : (gift.expiry ? m.warningForFriend(gift.expiry) : m.WARNING_LEGACY) + ' ') + 'Please don’t forward it.'; }
   }).catch(() => {}) : Promise.resolve();
   async function claim(key, takingBack) {
     await giftReady;

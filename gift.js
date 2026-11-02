@@ -24,6 +24,8 @@ export const EXPIRY_DAYS = [1, 7, 30]; // offered on /flick-on
 // has claimed the pot first. Use warningUntil(expiry) once the pot's real expiry is known.
 export const WARNING = 'Anyone with the link can claim it before it expires. Unclaimed after that? You can take it back.';
 export const warningUntil = (expiry) => `Anyone with the link can claim it until ${fmtDate(expiry)}. Unclaimed by then? You can take it back.`;
+// The same, for the FRIEND reading it (share text, claim view): the sender takes it back, not them.
+export const warningForFriend = (expiry) => `Anyone with the link can claim it until ${fmtDate(expiry)}. Unclaimed by then? It goes back to the sender.`;
 /** Links made before expiries existed have no expiry and no refund: only the link itself can take them back. */
 export const WARNING_LEGACY = 'Anyone with the link can claim it.';
 

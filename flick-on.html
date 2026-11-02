@@ -188,7 +188,7 @@
       try { const g = await gift(); made = await g.makeGift(sats, { senderKey: me, days: +$('days').value }); }
       catch (e) { $('err').textContent = 'No gift was made: ' + ((e && e.message) || 'the wallet said no.'); $('make').disabled = false; $('make').textContent = 'Make my link'; return; }
       url += '#' + made.fragment;
-      text = 'I’ve flicked off the old apps, and left you a gift. Come and flick on. ' + G.warningUntil(made.expiry) + ' Please don’t forward it:';
+      text = 'I’ve flicked off the old apps, and left you a gift. Come and flick on. ' + G.warningForFriend(made.expiry) + ' Please don’t forward it:';
       $('warnUntil').textContent = G.warningUntil(made.expiry);
       const kept = made.refund && G.saveRefund(made.refund);
       $('giftOutTxt').textContent = 'Send it to one person, privately. '
