@@ -66,9 +66,9 @@
       </select>
       <label class="small hidden" for="days" id="daysLabel" style="margin:0 6px 0 4px">Expires after</label>
       <select id="days" class="hidden"><option value="1">1 day</option><option value="7" selected>7 days</option><option value="30">30 days</option></select></div>
-    <div class="warn" id="giftNote" hidden><b>Anyone with this link can claim it.</b> A gift link is like cash: whoever opens it first gets it. Send it to one person, privately, never in a public post. A gift holds at most <span id="capTxt">$20</span>. Your wallet pays the gift when you make the link.<br><span id="expTxt"></span></div>
+    <div class="warn" id="giftNote" hidden><b id="warnGeneric">Anyone with the link can claim it before it expires. Unclaimed after that? You can take it back.</b> A gift link is like cash: whoever opens it first gets it. Send it to one person, privately, never in a public post. A gift holds at most <span id="capTxt">$20</span>. Your wallet pays the gift when you make the link.<br><span id="expTxt"></span></div>
     <div class="hidden" id="out">
-      <div class="warn hidden" id="giftOut"><b>Anyone with this link can claim it.</b> <span id="giftOutTxt"></span>
+      <div class="warn hidden" id="giftOut"><b id="warnUntil"></b> <span id="giftOutTxt"></span>
         <div class="bar" style="margin:10px 0 0"><button class="btn btn-ghost mini" id="saveRefund" type="button">Save refund file</button></div></div>
       <div class="linkbox"><code id="url"></code><button class="btn btn-ghost mini" id="copy" type="button">Copy</button><button class="btn btn-ghost mini hidden" id="share" type="button">Share</button></div>
       <div class="bar" style="margin-top:12px"><a class="btn btn-ghost mini" id="toX" target="_blank" rel="noopener">Post on X</a><a class="btn btn-ghost mini" id="toWa" target="_blank" rel="noopener">WhatsApp</a><a class="btn btn-ghost mini" id="toTg" target="_blank" rel="noopener">Telegram</a></div>
@@ -132,7 +132,8 @@
   async function expiryNote() {
     const g = await gift(), s = +$('gift').value;
     const exp = Math.floor(Date.now() / 1000) + +$('days').value * 86400;
-    $('expTxt').textContent = s ? 'If nobody claims it by ' + g.fmtDate(exp) + ', you can reclaim it from this page.' + (rate ? ' This gift is about ' + g.fmtUsd(g.usdOf(s, rate)) + '.' : '') : '';
+    $('warnGeneric').textContent = g.WARNING;
+    $('expTxt').textContent = s ? 'Made now, it would expire ' + g.fmtDate(exp) + '.' + (rate ? ' This gift is about ' + g.fmtUsd(g.usdOf(s, rate)) + '.' : '') : '';
   }
   const giftUi = () => { const on = !!+$('gift').value; $('giftNote').hidden = !on; $('days').classList.toggle('hidden', !on); $('daysLabel').classList.toggle('hidden', !on); if (on) expiryNote(); };
   $('gift').onchange = giftUi; $('days').onchange = giftUi;
@@ -187,10 +188,11 @@
       try { const g = await gift(); made = await g.makeGift(sats, { senderKey: me, days: +$('days').value }); }
       catch (e) { $('err').textContent = 'No gift was made: ' + ((e && e.message) || 'the wallet said no.'); $('make').disabled = false; $('make').textContent = 'Make my link'; return; }
       url += '#' + made.fragment;
-      text = 'I’ve flicked off the old apps, and left you a gift. Come and flick on (claim it by ' + G.fmtDate(made.expiry) + '). ' + G.WARNING + ' Please don’t forward it:';
+      text = 'I’ve flicked off the old apps, and left you a gift. Come and flick on. ' + G.warningUntil(made.expiry) + ' Please don’t forward it:';
+      $('warnUntil').textContent = G.warningUntil(made.expiry);
       const kept = made.refund && G.saveRefund(made.refund);
-      $('giftOutTxt').textContent = 'Send it to one person, privately. It expires ' + G.fmtDate(made.expiry) + '. '
-        + (made.refund ? 'If nobody claims it by then, reclaim it below. ' + (kept ? 'The refund is kept in this browser; save the file too, in case this browser forgets it.' : 'This browser won’t keep the refund, so save the file now.')
+      $('giftOutTxt').textContent = 'Send it to one person, privately. '
+        + (made.refund ? 'Once it expires, take it back with Reclaim below. ' + (kept ? 'The refund is kept in this browser; save the file too, in case this browser forgets it.' : 'This browser won’t keep the refund, so save the file now.')
           : 'We couldn’t sign a refund for this one, so keep this link: opening it yourself takes the gift back.');
       $('saveRefund').classList.toggle('hidden', !made.refund);
       $('saveRefund').onclick = () => download(G.refundFile(made.refund), 'bfriendsx-gift-refund-' + made.refund.txid.slice(0, 8) + '.json');

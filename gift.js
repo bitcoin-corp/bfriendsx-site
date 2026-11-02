@@ -20,7 +20,12 @@ const BRC29 = '3241645161d8';
 const FEE = 100;                       // sat/kB, the house rate (same as claims)
 export const CAP_USD = 20;             // the most any one pot may hold
 export const EXPIRY_DAYS = [1, 7, 30]; // offered on /flick-on
-export const WARNING = 'Anyone with this link can claim it.';
+// The warning wherever a pot link is made, shared or opened. It says plainly that the refund only works if nobody
+// has claimed the pot first. Use warningUntil(expiry) once the pot's real expiry is known.
+export const WARNING = 'Anyone with the link can claim it before it expires. Unclaimed after that? You can take it back.';
+export const warningUntil = (expiry) => `Anyone with the link can claim it until ${fmtDate(expiry)}. Unclaimed by then? You can take it back.`;
+/** Links made before expiries existed have no expiry and no refund: only the link itself can take them back. */
+export const WARNING_LEGACY = 'Anyone with the link can claim it.';
 
 /** The connected BRC-100 wallet: kept by bwx.js at sign-in, else reconnect (extension or stored pairing). */
 export async function wallet() {
