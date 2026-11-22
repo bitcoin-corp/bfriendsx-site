@@ -1,8 +1,7 @@
 // POST /api/onb { x: ["<X account id>", ...] }  (signed in) -> { x: { "<id>": { handle, identityKey } } }
 // Which of your imported friends are already on b: people who linked that X account to their bWalletX
 // (bmintx.com/link/x). Only linked accounts come back; ids that aren't on b are simply absent.
-import { readCookie, verifySession } from '@bwalletx/connect/server';
-import { body, originOk, secret } from './bwalletx/_auth.js';
+import { body, originOk, secret, readSession } from './bwalletx/_auth.js';
 import { db } from './_db.js';
 
 const MAX = 5000, CHUNK = 200;
@@ -13,7 +12,7 @@ export default async function handler(req, res) {
   if (!originOk(req.headers.origin)) return res.status(403).json({ error: 'Wrong origin.' });
   const s = secret(), q = db();
   if (!s || !q) return res.status(503).json({ error: 'Not switched on yet.' });
-  if (!(await verifySession(readCookie(req.headers.cookie, 'bwx_session'), { secret: s }))?.sub) return res.status(401).json({ error: 'Connect bWalletX first.' });
+  if (!(await readSession(req, s))?.sub) return res.status(401).json({ error: 'Connect bWalletX first.' });
   const ids = [...new Set(((await body(req)).x ?? []).map(String).filter((i) => /^\d{1,25}$/.test(i)))];
   if (ids.length > MAX) return res.status(400).json({ error: `Up to ${MAX} at a time.` });
   const x = {};
