@@ -92,7 +92,7 @@
     <a class="btn btn-blue" href="/friends">Bring your friends</a>
   </section>
 </div>
-<script src="https://unpkg.com/@bwalletx/connect@0.5.0/dist/bwalletx-connect.global.js" integrity="sha384-1XiN/accJppMI7qXUHzNrUAdUWIotONkjNy7rZBrwcvPxDCFk1yC83JY2c4LZ8gg" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@bwalletx/connect@0.9.0/dist/bwalletx-connect.global.js" integrity="sha384-ljVpAVRFkV0Eog6yjxI9c5nJKl0Ri9p77SuIPOohuhh6O1SygKqR1cprJ7kJfrK5" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" integrity="sha384-mZT2gIty7ZDdOGkxfP6joZcYdMW1Jvj9dRlfpTmaJAKKXTqzygtB22k7FLe+KZC1" crossorigin="anonymous"></script>
 <script src="/bwx.js"></script>
 <script>
@@ -186,7 +186,12 @@
       $('make').disabled = true; $('make').textContent = 'Approve the gift in bWalletX…';
       let made;
       try { const g = await gift(); made = await g.makeGift(sats, { senderKey: me, days: +$('days').value }); }
-      catch (e) { $('err').textContent = 'No gift was made: ' + ((e && e.message) || 'the wallet said no.'); $('make').disabled = false; $('make').textContent = 'Make my link'; return; }
+      catch (e) {
+        // No answer in time from bWalletX (connect 0.9.0: NO_ANSWER_MAYBE_SENT, or the wallet frame's timeout): it may still have paid.
+        const maybe = e && (e.code === 'NO_ANSWER_MAYBE_SENT' || e.maybeSent || /timed out/i.test(e.message || ''));
+        $('err').textContent = maybe ? 'No answer from bWalletX. It may still have paid: check bWalletX before you try again.' : 'No gift was made: ' + ((e && e.message) || 'the wallet said no.');
+        $('make').disabled = false; $('make').textContent = 'Make my link'; return;
+      }
       url += '#' + made.fragment;
       text = 'I’ve flicked off the old apps, and left you a gift. Come and flick on. ' + (made.expiry ? G.warningForFriend(made.expiry) : G.WARNING_LEGACY) + ' Please don’t forward it:';
       $('warnUntil').textContent = made.expiry ? G.warningUntil(made.expiry) : G.WARNING_LEGACY;

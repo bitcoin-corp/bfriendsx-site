@@ -1,6 +1,9 @@
 /* Connect bWalletX on bfriendsx.com: drop <span data-bwx></span> anywhere and include this after
    @bwalletx/connect's global build and qrcode-generator. Extension / in-app wallets connect straight away;
-   on a desktop with no extension it shows a QR to pair the phone app (or paste into web.bwalletx.com). */
+   on a desktop with no extension it shows a QR to pair the phone app (or paste into web.bwalletx.com).
+   On a phone (connect 0.9.0) it opens the bWalletX app, which signs in on its Connect card and sends the user back
+   to this origin's root with #bwx=… (connect strips it as it loads); that page finishes the sign-in here and goes
+   back to the page it started on. */
 (() => {
   const C = window.bWalletXConnect;
   const slots = [...document.querySelectorAll('[data-bwx]')];
@@ -57,12 +60,34 @@
     return modal.querySelector('.bwx-card');
   };
 
+  // The verify route needs the challenge's sealed ticket. On a phone the sign-in comes back in another tab (the
+  // root), so the ticket waits in localStorage under its nonce until then (2 min; gone once used).
+  const TICKETS = 'bfx:tickets';
+  const tickets = () => { try { const t = JSON.parse(localStorage.getItem(TICKETS) || '{}'); return t && typeof t === 'object' ? t : {}; } catch { return {}; } };
+  const keepTicket = (nonce, ticket) => { try { const t = tickets(); for (const k in t) if (!(t[k].at > Date.now() - 300e3)) delete t[k]; t[nonce] = { ticket, at: Date.now() }; localStorage.setItem(TICKETS, JSON.stringify(t)); } catch {} };
+  const takeTicket = (nonce) => { try { const t = tickets(), v = t[nonce]; delete t[nonce]; localStorage.setItem(TICKETS, JSON.stringify(t)); return v ? v.ticket : null; } catch { return null; } };
+  const signedIn = (k, wallet) => {
+    key = k; if (wallet) window.bfxWallet = wallet; close(); draw(); lookup(key);   // keep the wallet for gift pots (gift.js)
+    document.dispatchEvent(new CustomEvent('bfriendsx-wallet', { detail: { identityKey: key } }));
+  };
+
   async function connect() {
     let ticket = null;
+    let pm = null;
     try {
-      const r = await C.signInWithBwalletX({
-        challenge: async (identityKey) => { const ch = await post('/api/bwalletx/challenge', { identityKey }); ticket = ch.ticket; return ch; },
-        pairing: {
+      const challenge = async (identityKey) => { const ch = await post('/api/bwalletx/challenge', identityKey ? { identityKey } : {}); ticket = ch.ticket; return ch; };
+      // A wallet in this browser (extension, in-app): sign in straight away.
+      let wallet = (await C.discoverBwalletX(C.DEFAULT_DISCOVER_MS || 300))?.wallet || null;
+      let first = null, paired = false;
+      if (!wallet) {
+        paired = true;
+        // Pairing: fetch the challenge first and fold it into the link, so bWalletX asks once ("Connect and sign in").
+        const pre = await challenge();
+        keepTicket(pre.nonce, pre.ticket);
+        const login = C.foldableLogin(pre, location.origin);
+        // Phones get bWalletX's own sheet ("Open bWalletX", and the way back to this page); computers our QR.
+        pm = C.isTouchDevice && C.isTouchDevice() ? C.pairingModal({ mode: 'app' }) : null;
+        const pairing = pm || {
           onLink: (link) => {
             let qr = '';
             if (window.qrcode) { const q = window.qrcode(0, 'M'); q.addData(link); q.make(); qr = q.createSvgTag({ cellSize: 4, margin: 0 }); }
@@ -70,21 +95,38 @@
             card.querySelector('.bwx-link').onclick = () => navigator.clipboard?.writeText(link);
           },
           onCode: (code) => { const el = document.getElementById('bwxCode'); if (el) el.innerHTML = `Check your wallet shows <span class="bwx-code">${esc(code)}</span>, then tap Connect.`; },
-        },
+        };
+        const c = await C.connectBwalletX({ pairing: login ? { ...pairing, login } : pairing, discoverMs: 0 });
+        wallet = c.wallet;
+        // The challenge bWalletX signed with Connect, or one still fresh enough to sign now.
+        if (wallet.signedIn || pre.expiresAt - Date.now() > 30e3) { first = pre; ticket = pre.ticket; }
+      }
+      const r = await C.signInWithBwalletX({
+        wallet, skipWaitForAuthentication: paired, // a paired phone: no lock check over the link (as before)
+        challenge: (k) => { const c = first; first = null; return c ? Promise.resolve(c) : challenge(k); },
       });
+      takeTicket(r.nonce);
       const v = await post('/api/bwalletx/verify', { identityKey: r.identityKey, nonce: r.nonce, signature: r.signature, ticket });
-      key = v.identityKey; window.bfxWallet = r.wallet || null; close(); draw(); lookup(key);   // keep the wallet for gift pots (gift.js)
-      document.dispatchEvent(new CustomEvent('bfriendsx-wallet', { detail: { identityKey: key } }));
+      signedIn(v.identityKey, r.wallet || null);
     } catch (e) {
-      if (e && e.code === 'NOT_FOUND') {
+      if (e && e.code === 'RETURNED_IN_ANOTHER_TAB') {
+        // bWalletX sent the user back to a new tab, which signed in: re-read the session here.
+        close(); recheck();
+      } else if (e && e.code === 'NOT_FOUND') {
         show(`<h3>No bWalletX found</h3><p>Get the bWalletX extension or app, or use the web wallet.</p><p><a class="bwx-btn on" href="https://bwalletx.com/get">Get bWalletX</a></p>`);
       } else if (modal) {
         modal.querySelector('.bwx-card').insertAdjacentHTML('beforeend', `<p style="color:#ff8a7a">${esc((e && e.message) || 'That didn’t work. Try again.')}</p>`);
       } else {
         show(`<h3>Couldn’t connect</h3><p style="color:#ff8a7a">${esc((e && e.message) || 'Try again.')}</p>`);
       }
+    } finally {
+      try { pm && pm.close(); } catch {}
     }
   }
+  // Signed in from another tab meanwhile (bWalletX's return on a phone): pick up the session, and tell the page
+  // (invite.html then turns the badge gold and claims a gift that is still in THIS tab's link).
+  const recheck = () => { if (!key) fetch('/api/bwalletx/session', { credentials: 'same-origin' }).then((r) => r.json()).then((j) => { if (j.identityKey && !key) signedIn(j.identityKey, null); }).catch(() => {}); };
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') recheck(); });
   async function disconnect() {
     await post('/api/bwalletx/session', {}).catch(() => {});
     try { C.clearPairing?.(); } catch {}
@@ -95,6 +137,21 @@
   // After a reload the session cookie says who you are, but bWalletX only wears this site's theme once the page has
   // talked to it. With an extension or in-app wallet, quietly ask for the identity key again (never pairs).
   const touch = async () => { try { const f = await C.discoverBwalletX?.(800); if (f && f.wallet) await f.wallet.getPublicKey({ identityKey: true }); } catch {} };
-  fetch('/api/bwalletx/session', { credentials: 'same-origin' }).then((r) => r.json()).then((j) => { key = j.identityKey || null; draw(); if (key) { lookup(key); touch(); } }).catch(draw);
+  // bWalletX's return on a phone: finish the pairing, post the sign-in it folded into Connect, go back to the page.
+  const returned = C.hasReturnFragment && C.hasReturnFragment()
+    ? C.resumeReturnedPairing().catch(() => null).then(async (r) => {
+      if (!r) return;
+      window.bfxWallet = r.wallet;
+      const ticket = r.login && takeTicket(r.login.nonce);
+      if (ticket) {
+        try {
+          const v = await post('/api/bwalletx/verify', { identityKey: r.login.identityKey, nonce: r.login.nonce, signature: r.login.signature, ticket });
+          if (!(r.page && r.page !== location.origin + location.pathname)) signedIn(v.identityKey, r.wallet);
+        } catch { /* expired or refused: the button works as usual */ }
+      }
+      if (r.page && r.page !== location.origin + location.pathname) location.replace(r.page);
+    })
+    : Promise.resolve();
+  returned.then(() => fetch('/api/bwalletx/session', { credentials: 'same-origin' })).then((r) => r.json()).then((j) => { if (!key) key = j.identityKey || null; draw(); if (key) { lookup(key); touch(); } }).catch(draw);
   draw();
 })();
