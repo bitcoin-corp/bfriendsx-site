@@ -1,7 +1,6 @@
 // POST /api/claims { t }  (signed in as the invited friend) -> { claimed: true }   records that the invite was accepted
 // GET  /api/claims        (signed in)                       -> { claims: [{ name, network, invitee, claimedAt }] }
-import { readCookie, verifySession } from '@bwalletx/connect/server';
-import { body, originOk, secret } from './bwalletx/_auth.js';
+import { body, originOk, secret, readSession } from './bwalletx/_auth.js';
 import { open } from './invite.js';
 import { db } from './_db.js';
 
@@ -9,7 +8,7 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   const s = secret(), q = db();
   if (!s || !q) return res.status(503).json({ error: 'Claims are not switched on yet.' });
-  const me = (await verifySession(readCookie(req.headers.cookie, 'bwx_session'), { secret: s }))?.sub;
+  const me = (await readSession(req, s))?.sub;
   if (!me) return res.status(401).json({ error: 'Connect bWalletX first.' });
 
   if (req.method === 'GET') {

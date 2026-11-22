@@ -5,8 +5,7 @@
 // No database: each link carries its invite sealed (AES-256-GCM) so it can't be read or forged. Only a name and
 // a network go in. Emails and other contact details stay in the inviter's browser and are never sent here.
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto';
-import { readCookie, verifySession } from '@bwalletx/connect/server';
-import { ORIGIN, body, originOk, secret } from './bwalletx/_auth.js';
+import { ORIGIN, body, originOk, secret, readSession } from './bwalletx/_auth.js';
 
 const NETWORKS = new Set(['x', 'facebook', 'instagram', 'linkedin', 'tiktok', 'youtube', 'telegram']);
 const MAX = 500;
@@ -38,7 +37,7 @@ export default async function handler(req, res) {
   }
   if (req.method !== 'POST') return res.status(405).end();
   if (!originOk(req.headers.origin)) return res.status(403).json({ error: 'Wrong origin.' });
-  const me = await verifySession(readCookie(req.headers.cookie, 'bwx_session'), { secret: s });
+  const me = await readSession(req, s);
   if (!me?.sub) return res.status(401).json({ error: 'Connect bWalletX first, so your friends know the invite is from you.' });
   const b = await body(req);
   if (b.general) {

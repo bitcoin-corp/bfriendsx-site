@@ -60,22 +60,17 @@
     return modal.querySelector('.bwx-card');
   };
 
-  // The verify route needs the challenge's sealed ticket. On a phone the sign-in comes back in another tab (the
-  // root), so the ticket waits in localStorage under its nonce until then (2 min; gone once used).
-  const TICKETS = 'bfx:tickets';
-  const tickets = () => { try { const t = JSON.parse(localStorage.getItem(TICKETS) || '{}'); return t && typeof t === 'object' ? t : {}; } catch { return {}; } };
-  const keepTicket = (nonce, ticket) => { try { const t = tickets(); for (const k in t) if (!(t[k].at > Date.now() - 300e3)) delete t[k]; t[nonce] = { ticket, at: Date.now() }; localStorage.setItem(TICKETS, JSON.stringify(t)); } catch {} };
-  const takeTicket = (nonce) => { try { const t = tickets(), v = t[nonce]; delete t[nonce]; localStorage.setItem(TICKETS, JSON.stringify(t)); return v ? v.ticket : null; } catch { return null; } };
+  // The verify route needs the challenge's one-time ticket. It is an HttpOnly cookie the challenge route sets
+  // (never seen by this page), so the tab bWalletX returns to on a phone has it too.
   const signedIn = (k, wallet) => {
     key = k; if (wallet) window.bfxWallet = wallet; close(); draw(); lookup(key);   // keep the wallet for gift pots (gift.js)
     document.dispatchEvent(new CustomEvent('bfriendsx-wallet', { detail: { identityKey: key } }));
   };
 
   async function connect() {
-    let ticket = null;
     let pm = null;
     try {
-      const challenge = async (identityKey) => { const ch = await post('/api/bwalletx/challenge', identityKey ? { identityKey } : {}); ticket = ch.ticket; return ch; };
+      const challenge = (identityKey) => post('/api/bwalletx/challenge', identityKey ? { identityKey } : {});
       // A wallet in this browser (extension, in-app): sign in straight away.
       let wallet = (await C.discoverBwalletX(C.DEFAULT_DISCOVER_MS || 300))?.wallet || null;
       let first = null, paired = false;
@@ -83,7 +78,6 @@
         paired = true;
         // Pairing: fetch the challenge first and fold it into the link, so bWalletX asks once ("Connect and sign in").
         const pre = await challenge();
-        keepTicket(pre.nonce, pre.ticket);
         const login = C.foldableLogin(pre, location.origin);
         // Phones get bWalletX's own sheet ("Open bWalletX", and the way back to this page); computers our QR.
         pm = C.isTouchDevice && C.isTouchDevice() ? C.pairingModal({ mode: 'app' }) : null;
@@ -99,14 +93,13 @@
         const c = await C.connectBwalletX({ pairing: login ? { ...pairing, login } : pairing, discoverMs: 0 });
         wallet = c.wallet;
         // The challenge bWalletX signed with Connect, or one still fresh enough to sign now.
-        if (wallet.signedIn || pre.expiresAt - Date.now() > 30e3) { first = pre; ticket = pre.ticket; }
+        if (wallet.signedIn || pre.expiresAt - Date.now() > 30e3) first = pre;
       }
       const r = await C.signInWithBwalletX({
         wallet, skipWaitForAuthentication: paired, // a paired phone: no lock check over the link (as before)
         challenge: (k) => { const c = first; first = null; return c ? Promise.resolve(c) : challenge(k); },
       });
-      takeTicket(r.nonce);
-      const v = await post('/api/bwalletx/verify', { identityKey: r.identityKey, nonce: r.nonce, signature: r.signature, ticket });
+      const v = await post('/api/bwalletx/verify', { identityKey: r.identityKey, nonce: r.nonce, signature: r.signature });
       signedIn(v.identityKey, r.wallet || null);
     } catch (e) {
       if (e && e.code === 'RETURNED_IN_ANOTHER_TAB') {
@@ -142,10 +135,9 @@
     ? C.resumeReturnedPairing().catch(() => null).then(async (r) => {
       if (!r) return;
       window.bfxWallet = r.wallet;
-      const ticket = r.login && takeTicket(r.login.nonce);
-      if (ticket) {
+      if (r.login) {
         try {
-          const v = await post('/api/bwalletx/verify', { identityKey: r.login.identityKey, nonce: r.login.nonce, signature: r.login.signature, ticket });
+          const v = await post('/api/bwalletx/verify', { identityKey: r.login.identityKey, nonce: r.login.nonce, signature: r.login.signature });
           if (!(r.page && r.page !== location.origin + location.pathname)) signedIn(v.identityKey, r.wallet);
         } catch { /* expired or refused: the button works as usual */ }
       }
